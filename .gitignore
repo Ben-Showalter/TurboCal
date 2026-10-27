@@ -1,0 +1,22 @@
+# Build / IDE
+*.iml
+.gradle/
+build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.idea/
+.DS_Store
+*.hprof
+
+# Secrets: never commit (AGENTS.md §1, §7, §9)
+turbocal_feeds*.json
+keystore.properties
+*.jks
+*.keystore
+!debug.keystore
+
+# APKs go to GitHub Releases, not git
+*.apk
+*.aab
