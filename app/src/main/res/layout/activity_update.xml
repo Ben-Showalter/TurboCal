@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <include layout="@layout/title_bar" />
+
+    <Button
+        android:id="@+id/action"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/gutter"
+        android:background="@drawable/focus_selector"
+        android:focusable="true"
+        android:focusableInTouchMode="false"
+        android:minHeight="@dimen/row_min_height"
+        android:stateListAnimator="@null"
+        android:textAllCaps="false"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_body" />
+
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/gutter"
+        android:paddingEnd="@dimen/gutter"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_body" />
+
+    <ScrollView
+        android:id="@+id/notes_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:focusable="true"
+        android:focusableInTouchMode="false"
+        android:overScrollMode="never">
+
+        <TextView
+            android:id="@+id/notes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/gutter"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_label" />
+    </ScrollView>
+
+    <include layout="@layout/softkey_bar" />
+</LinearLayout>

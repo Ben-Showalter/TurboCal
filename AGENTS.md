@@ -76,37 +76,41 @@ When you learn a new device quirk while working here, add it to the guide as wel
   | ICS parsing + recurrence | `org.mnode.ical4j:ical4j` **3.2.x** (the line DAVx⁵ ships on Android) |
   | Database | `androidx.room` (KSP) |
   | Background sync | `androidx.work:work-runtime-ktx` |
-  | Lifecycle / coroutines | `androidx.lifecycle`, `kotlinx-coroutines-android` |
-  | UI | `androidx.appcompat`, `androidx.recyclerview`, `androidx.core` |
+  | Coroutines | `kotlinx-coroutines-android` (each screen has a `MainScope` cancelled in `onDestroy`) |
+  | UI | **framework** `Activity`, `ListView`, `AlertDialog` (no AppCompat, no RecyclerView) |
+  | FileProvider, receiver flags | `androidx.core` |
   | HTTP | **none**: `HttpURLConnection` (as in MatChat's updater) |
   | JSON | **none**: `org.json` (built into Android) |
-  | Tests | JUnit 4, Robolectric, `androidx.room:room-testing`, `kotlinx-coroutines-test` |
+  | Tests | JUnit 4, `org.json` (JVM copy for `:core`), Robolectric, `room-testing`, `kotlinx-coroutines-test` |
 
 ## 3. Repository map
 
-Keep it to a single `:app` module, with packages that keep the parser free of Android code:
+Two modules. All logic that can be pure Kotlin lives in `:core`, so it tests on any JDK in
+seconds, even without the Android SDK.
 
 ```
-app/src/main/java/com/turbocal/app/
-  TurboCalApp.kt        Application; builds AppGraph; schedules sync; launch update check
-  AppGraph.kt           hand-written wiring (db, repos, sync, updater)
-  ics/                  PURE KOTLIN/JVM. ical4j → our model. No android.* imports.
-    IcsParser.kt          InputStream → ParsedFeed (events, overrides, cancellations)
-    Expander.kt           ParsedFeed + window + device zone → List<EventInstance>
-    Ical4jConfig.kt       the system properties ical4j needs on Android (§4)
-  data/                 Room: entities, DAOs, TurboCalDatabase, repositories
-  sync/                 FeedFetcher (HTTP + ETag), SyncWorker, SyncScheduler, SyncStatus
-  feeds/                FeedUrl (normalise, redact), FeedImport (JSON file, §7)
-  update/               UpdateManager, VersionCompare, ApkInstaller (§9)
-  ui/
-    base/               FlipBaseActivity, KeyMap, SoftkeyBar, SystemBars, focus drawables
-    agenda/  day/  month/  detail/  settings/  feededit/  update/
-app/src/main/res/xml/ical4j.properties   (or set in Ical4jConfig — choose one, not both)
-app/src/test/resources/ics/              sample .ics fixtures (§6)
+core/                      PURE KOTLIN/JVM — no android.* (it can't compile against Android)
+  model/                   EventTime (AllDay | Timed | Floating), EventInstance
+  ics/                     Ical4jConfig, IcsParser, Expander, ExpansionWindow, WindowsZones, FeedReader
+  feeds/                   FeedUrl (normalise, redact), FeedImport (JSON format + merge plan), FeedColors
+  sync/                    HttpTransport + UrlConnectionTransport, FeedFetcher (ETag/304/errors), ManualSyncThrottle
+  update/                  ReleaseCheck (GitHub releases/latest, asset pick), VersionCompare
+  display/                 AgendaBuilder, DayBuilder, MonthGrid, Formats — every string a screen shows
+  src/test/resources/ics/  the fixture .ics files (§6)
+app/                       Android: storage, background work, screens
+  TurboCalApp, AppGraph    application + hand-written wiring
+  data/                    Room entities/DAO/database, Prefs, CalendarRepository
+  sync/                    SyncRunner (fetch → store), SyncWorker, SyncScheduler, SyncState
+  update/                  UpdateManager (download, verify, install), UpdateStatus
+  feeds/                   FeedFileImporter (finds turbocal_feeds.json)
+  ui/base/                 FlipBaseActivity, KeyMap, SystemBars, CalendarActivity, RowAdapter
+  ui/agenda|day|month|detail|settings|feededit|update/
 ```
 
-**The `ics/` package must not import `android.*`.** A unit test checks this. That keeps the most
-important code testable on the JVM in milliseconds.
+- `-Pturbocal.jvmOnly=true` drops `:app` from the build, so `:core` needs no Google Maven or
+  SDK: `./gradlew -Pturbocal.jvmOnly=true :core:test`.
+- Gradle plugins go on the root `buildscript` classpath (so the Kotlin and Android plugins share
+  one classloader), not per-module `plugins { version }`.
 
 ## 4. Parsing and time — the correctness rules
 
@@ -131,10 +135,16 @@ named compatibility quirks below.
   `STATUS:CANCELLED`. Match overrides by UID + original start instant, not by string.
 - **STATUS:CANCELLED** on a master event hides the whole series; on an override it hides just
   that instance.
-- **TZID / VTIMEZONE:** resolve through ical4j using the feed's own VTIMEZONE. **Outlook sends
-  Windows zone names** (`TZID:Pacific Standard Time`) with an embedded VTIMEZONE. Trust the
-  embedded VTIMEZONE first; if it's missing, map the Windows name through a small CLDR-based
-  table in `ics/`.
+- **TZID / VTIMEZONE:** a zoned wall time is resolved, in this order:
+  1. with `java.time` when the TZID is an IANA zone the phone knows;
+  2. with `java.time` after mapping a **Windows zone name** (Outlook sends
+     `TZID:Pacific Standard Time`) through `WindowsZones`;
+  3. with ical4j from the feed's own VTIMEZONE (custom or unknown TZIDs).
+
+  java.time comes first because it follows RFC 5545 for the ambiguous fall-back hour (the
+  *first* 1:30 AM) and the skipped spring-forward hour. ical4j's VTIMEZONE zones pick the second
+  1:30, which a test caught. `DURATION` is applied to our resolved start, never to ical4j's
+  derived DTEND.
 - **UTC times** (`...Z`) are instants.
 - **Floating times** (no `Z`, no TZID) are wall-clock times in **whatever the device zone is
   when they are displayed**. Store them as local date-time, not as an instant.
@@ -146,21 +156,25 @@ named compatibility quirks below.
 - **Display** everything in `ZoneId.systemDefault()`. Re-read it on every render, and on
   `ACTION_TIMEZONE_CHANGED` re-expand all feeds (instants don't move, but the window does).
 - **DST:** never add hours to wall times or minutes to instants by hand to cross a day. Use
-  `ZonedDateTime`/`LocalDate` arithmetic. A one-hour meeting at 1:30 AM on the US fall-back day
-  (Sun **Nov 1, 2026**) is still one hour long.
+  `ZonedDateTime`/`LocalDate` arithmetic. On the US fall-back day (Sun **Nov 1, 2026**),
+  `DTSTART 01:30` + `DURATION:PT1H` is 05:30Z–06:30Z (one real hour), and 22:00 Oct 31 → 03:00
+  Nov 1 is six real hours.
 - **Big feeds:** parse from a streamed file in the worker, never from a `String` holding the whole
   body. These phones have 2 GB of RAM.
 
 ### Storage model (the contract between sync and UI)
 
-- `feed`: id, name, url (secret), color, enabled, etag, lastModified, lastSuccessAt,
-  lastAttemptAt, lastError (plain-language text, never containing the URL).
-- `event_instance`: feedId, uid, recurrenceKey, title, location, description, allDay,
-  plus **either** `startEpochDay`/`endEpochDayExclusive` (all-day) **or**
-  `startUtcMillis`/`endUtcMillis` (zoned/UTC) **or** `startLocal`/`endLocal` (floating).
-  Index on the columns the day and range queries use.
-- The UI queries "instances overlapping [day start, next day start) in the device zone" via one
-  DAO method. Do not filter by date in Kotlin after loading everything.
+- `feeds`: id, name, url (secret), color, enabled, etag, lastModified, lastParsedAt,
+  lastSuccessAt, lastAttemptAt, lastError (plain-language text, never containing the URL).
+- `events`: feedId (cascade delete), uid, recurrenceKey, title, location, description, `kind`
+  (all-day / timed / floating), `startKey`, `endKey`.
+- **Keys** (`EventTime.startKey/endKey`) are epoch millis. A timed key is the real instant. An
+  all-day or floating key reads its wall time as if it were UTC, so it is within ±14 h of the
+  real instant in any zone. Range queries widen by `EventTime.KEY_SLACK_MILLIS` and then filter
+  exactly with `EventTime.overlaps`, so **rows never need rewriting when the phone's zone
+  changes**. Only the window edges move, which the re-sync on `ACTION_TIMEZONE_CHANGED` covers.
+- The DAO has one range query; `CalendarRepository.events(from, to, zone)` is the only way
+  screens read events. Do not load everything and filter by date in Kotlin.
 
 ## 5. Sync rules
 
@@ -175,6 +189,8 @@ named compatibility quirks below.
   parse.
 - Follow up to 5 redirects yourself (`HttpURLConnection` won't follow https→http or cross-protocol
   redirects), https only. Use 20 s connect/read timeouts and a `User-Agent: TurboCal/<version>`.
+- A 304 keeps events only while the last full parse is less than a day old. After that the
+  validators are dropped, so the rolling window's far end gets expanded.
 - Each feed fails independently. Map errors to short plain text for the status line:
   "No connection", "Feed not found (404) - check the link", "Not an iCalendar feed",
   "Server error (503)". Never put the URL in the error.
@@ -184,9 +200,10 @@ named compatibility quirks below.
 
 | You changed | You must add |
 |---|---|
-| `ics/` | A fixture `.ics` in `app/src/test/resources/ics/` and a JVM test asserting the expanded instances |
+| `:core` `ics/` | A fixture `.ics` in `app/src/test/resources/ics/` and a JVM test asserting the expanded instances |
 | Sync / fetch | A test using a fake HTTP layer (200, 304, 404, timeout, garbage body), asserting **last good data is kept** |
-| A ViewModel | A JUnit test of the resulting state |
+| `:core` `display/` (rows, labels) | A JVM test of the rows/strings it produces |
+| `SyncRunner` / DAO | A Robolectric test with an in-memory Room database (see `SyncRunnerTest`) |
 | Keys, focus or a new screen | A Robolectric key test (focus never `null`, never stuck) and an entry in the key-only traversal test |
 | Updater | `VersionCompare` tests and an asset-picking test against a canned `releases/latest` JSON |
 
@@ -209,7 +226,8 @@ Pin the device zone in tests (`TimeZone.setDefault` in a rule, restored afterwar
 the machine's zone. Commands:
 
 ```bash
-./gradlew test                    # JVM + Robolectric — must be green before any commit
+./gradlew -Pturbocal.jvmOnly=true :core:test   # parser and logic only; any JDK, no Android SDK
+./gradlew test                    # :core + :app (Robolectric) — must be green before any commit
 ./gradlew lint
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug       # adb over USB to the E4810
@@ -251,9 +269,12 @@ the top), **Month** (grid, dots on days with events, week starts on the locale's
 **Event detail** (read-only), **Settings** (feeds, sync interval, Sync now, per-feed status,
 Import, Software update), **Feed edit**, **Software update**.
 
-One Activity per screen, each extending `FlipBaseActivity`. Each screen gets
-`<Name>Activity` (render only), `<Name>ViewModel` (all logic, display-ready strings like
-`"3:30 PM"` / `"All day"`) and `<Name>State`. Loading, empty and error are fields in the state.
+One framework `Activity` per screen, each extending `FlipBaseActivity` (Agenda/Day/Month extend
+`CalendarActivity`). **Logic and every displayed string come from `:core` `display/`**
+(`AgendaBuilder`, `DayBuilder`, `MonthGrid`, `Formats`), which is unit-tested. An Activity only
+collects a repository `Flow`, passes it through a builder, and renders. Lists are `ListView`s:
+the list owns focus, the shared selector is drawn on the selected row, and day headers are
+disabled items, so the D-pad skips them. Empty states are a selectable "No events" row.
 
 ### Key map — the only source of truth (keep the README table identical)
 
@@ -278,11 +299,12 @@ One Activity per screen, each extending `FlipBaseActivity`. Each screen gets
 - `7`/`9` are aliases on **every** screen except while a text field has focus, where digits type.
 - Soft-key label bar at the bottom: `View` · `Open` · `Options`. The labels are not focusable.
   Hide the system navigation bar (guide §4) except while a text field has focus.
-- **Focus:** one shared, strong highlight (tinted fill + 6 dp teal bar) on every row, cell and
-  button. RecyclerViews aren't focusable themselves; rows are. Every screen sets its starting
-  focus (Agenda/Day: first event of today or the "No events" row; Month: today's cell) and
-  restores it after returning from a child screen. Empty states are a focusable row, so focus
-  never goes to `null`.
+- **Focus:** one shared, strong highlight (`focus_highlight`: tinted fill, 2 dp teal outline,
+  6 dp teal bar) for list rows (`list_row_selector`) and for buttons and fields
+  (`focus_selector`). The month grid draws a filled teal cell. Every screen sets its starting
+  focus (Agenda: today's first event or its "No events" row; Day: first row; Month: the grid on
+  today). `RowAdapter.submit` keeps the selection on the same row (stable ids) when sync changes
+  the data.
 
 ## 9. In-app updates (from day one) with manual APK releases
 
@@ -323,14 +345,17 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
   fail a debug build over it.
 - The one release keystore is kept outside the repo and backed up by the owner. **Losing it means
   existing installs can never update in place.** Never generate a new one without asking.
-- Name the outputs `TurboCal-<versionName>-<abi>.apk` / `TurboCal-<versionName>-universal.apk`
-  (ABI splits on, universal APK on).
+- Outputs: `TurboCal-<versionName>.apk` (release) and `TurboCal-<versionName>-debug.apk`.
+  There are no ABI splits: TurboCal has no native code, so every split would be the same file.
+  The updater still prefers an ABI-named asset, then `universal`, then the only `.apk`.
+- Before installing, `UpdateManager` checks that the downloaded file is complete, is
+  `com.turbocal.app`, and is newer than the installed version.
 
 ### Manual release checklist (document the same steps in the README)
 
 1. Bump `versionCode` (+1, always increases) and `versionName` (semver) in `app/build.gradle.kts`.
 2. `./gradlew test lint :app:assembleRelease` with `keystore.properties` present.
-3. `apksigner verify --print-certs app/build/outputs/apk/release/*.apk`. The certificate must match
+3. `apksigner verify --print-certs app/build/outputs/apk/release/TurboCal-<version>.apk`. The certificate must match
    the previous release's.
 4. Install it on the phone over the previous release with `adb install -r`. It must update
    without uninstalling and keep the feeds.
@@ -366,6 +391,11 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
 - No search box over events in v1.
 
 ## 12. Build stages (do them in order; each ends green)
+
+Status: stages 1–3 are written. `:core` tests pass on the JVM. `:app` has been type-checked but
+not yet built with AGP or run; the first Android Studio build and stage 4 are next. The
+key-only traversal test (§6) has not been written yet; the stage 4 device pass covers it by hand.
+
 
 1. **Project + data + parser.** Gradle setup and `.gitignore`, ical4j on Android (§4),
    `ics/` + fixtures + every §6 parser test, Room schema + DAO range queries, `FeedUrl`,

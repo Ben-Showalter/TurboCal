@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one focus highlight for list rows (guide §2): drawn ON TOP of the
+     selected row (drawSelectorOnTop="true"), a tinted fill, a 2dp teal
+     outline and a 6dp teal bar on the leading edge. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:drawable="@drawable/focus_highlight" />
+    <item android:state_pressed="true" android:drawable="@drawable/focus_highlight" />
+    <item android:state_selected="true" android:drawable="@drawable/focus_highlight" />
+    <item android:drawable="@android:color/transparent" />
+</selector>

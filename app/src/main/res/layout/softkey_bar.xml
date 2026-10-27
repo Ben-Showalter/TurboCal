@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Our own soft-key label bar (the system one is hidden, guide §4). Not focusable. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/softkey_bar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_header"
+    android:focusable="false"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/gutter"
+    android:paddingEnd="@dimen/gutter">
+
+    <TextView
+        android:id="@+id/softkey_left"
+        style="@style/Softkey"
+        android:gravity="start" />
+
+    <TextView
+        android:id="@+id/softkey_center"
+        style="@style/Softkey"
+        android:gravity="center"
+        android:textColor="@color/text_primary" />
+
+    <TextView
+        android:id="@+id/softkey_right"
+        style="@style/Softkey"
+        android:gravity="end" />
+</LinearLayout>

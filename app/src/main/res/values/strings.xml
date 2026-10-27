@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TurboCal</string>
+
+    <!-- Soft-key labels: left = the screen's primary action, right = Options (guide §1). -->
+    <string name="key_view">View</string>
+    <string name="key_open">Open</string>
+    <string name="key_options">Options</string>
+    <string name="key_select">Select</string>
+    <string name="key_sync">Sync</string>
+    <string name="key_day">Day</string>
+    <string name="key_save">Save</string>
+    <string name="key_keys">Keys</string>
+
+    <string name="title_agenda">Agenda</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_update">Software update</string>
+    <string name="title_add_feed">Add calendar</string>
+    <string name="title_edit_feed">Edit calendar</string>
+
+    <!-- Options menu on the calendar views. The key shortcut follows in brackets. -->
+    <string name="menu_sync">Sync now (0)</string>
+    <string name="menu_today">Go to today (5)</string>
+    <string name="menu_settings">Settings (*)</string>
+    <string name="menu_show_disabled">Show disabled calendars (#)</string>
+    <string name="menu_hide_disabled">Hide disabled calendars (#)</string>
+    <string name="menu_update">Check for updates</string>
+    <string name="menu_keys">Key help</string>
+
+    <string name="status_syncing">Syncing…</string>
+    <string name="status_no_feeds">No calendars - press * to add one</string>
+    <string name="status_error">Sync problem - see Settings</string>
+    <string name="toast_showing_disabled">Showing disabled calendars</string>
+    <string name="toast_hiding_disabled">Hiding disabled calendars</string>
+    <string name="toast_sync_started">Syncing…</string>
+    <string name="toast_offline">No connection - will sync when online</string>
+    <string name="toast_no_feeds">No calendars yet - press * for Settings</string>
+
+    <string name="feed_name">Name</string>
+    <string name="feed_url">Calendar link (https:// or webcal://)</string>
+    <string name="feed_color">Color: ‹ %1$s ›</string>
+    <string name="feed_enabled_on">Enabled: On (OK to change)</string>
+    <string name="feed_enabled_off">Enabled: Off (OK to change)</string>
+    <string name="feed_save">Save</string>
+    <string name="feed_cancel">Cancel</string>
+    <string name="feed_bad_url">That doesn\'t look like a calendar link. It should start with https:// or webcal://</string>
+    <string name="feed_name_default">Calendar</string>
+
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_interval">Sync every</string>
+    <string name="settings_import">Import feeds from file</string>
+    <string name="settings_import_sub">Download/turbocal_feeds.json</string>
+    <string name="settings_add">Add calendar by typing a link</string>
+    <string name="settings_show_disabled">Show disabled calendars</string>
+    <string name="settings_update">Software update</string>
+    <string name="settings_header_sync">Sync</string>
+    <string name="settings_header_calendars">Calendars</string>
+    <string name="settings_header_app">App</string>
+    <string name="settings_no_feeds">No calendars yet. Import a file or type a link above.</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+
+    <string name="feed_menu_edit">Edit</string>
+    <string name="feed_menu_turn_off">Turn off</string>
+    <string name="feed_menu_turn_on">Turn on</string>
+    <string name="feed_menu_sync">Sync this calendar</string>
+    <string name="feed_menu_delete">Delete</string>
+    <string name="feed_delete_title">Delete %1$s?</string>
+    <string name="feed_delete_body">Its events are removed from this phone.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="keep">Keep</string>
+
+    <string name="import_not_found">No feeds file found. Push one with adb to Download/turbocal_feeds.json (see the README).</string>
+    <string name="import_unreadable">Couldn\'t read the feeds file. Allow storage access, or push it to Android/data/com.turbocal.app/files/ instead.</string>
+    <string name="import_delete_title">Delete the file now?</string>
+    <string name="import_delete_body">It contains your private calendar links.</string>
+    <string name="import_deleted">File deleted</string>
+    <string name="import_not_deleted">Couldn\'t delete the file - delete it with adb</string>
+    <string name="permission_denied">Storage access was not allowed</string>
+
+    <string name="detail_calendar">Calendar: %1$s</string>
+    <string name="detail_location">Where: %1$s</string>
+    <string name="detail_missing">This event is no longer in the calendar.</string>
+
+    <string name="update_installed">Installed: %1$s</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">You have the latest version.</string>
+    <string name="update_no_release">No releases published yet.</string>
+    <string name="update_no_asset">Release %1$s has no APK for this phone.</string>
+    <string name="update_available">Version %1$s is available (%2$s).</string>
+    <string name="update_download">Download %1$s</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_downloaded">Downloaded %1$s. Press OK to install.</string>
+    <string name="update_install">Install</string>
+    <string name="update_retry">Try again</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="update_badge">Update available: %1$s</string>
+    <string name="update_allow_sources">Allow installs: select TurboCal, press OK to turn on, then press Back.</string>
+
+    <string name="keys_help">View (left key or 7): Agenda, Day, Month\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day or month\n5: today\n0: sync now\n*: Settings\n#: show/hide disabled calendars\nBack: back</string>
+    <string name="unhandled_key">KEY %1$d</string>
+</resources>

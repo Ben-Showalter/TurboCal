@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Transparent background, the shape fills ~85% of the square, a "T" cut out
+     with evenOdd (guide §4). Calendar page with two binder rings. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FF4DB6AC"
+        android:fillType="evenOdd"
+        android:pathData="M8,7h32a4,4 0,0 1,4 4v29a4,4 0,0 1,-4 4h-32a4,4 0,0 1,-4 -4v-29a4,4 0,0 1,4 -4z
+            M14,17h20v5h-7.5v16h-5v-16h-7.5z" />
+    <path
+        android:fillColor="#FF4DB6AC"
+        android:pathData="M13,3h4v8h-4z M31,3h4v8h-4z" />
+</vector>

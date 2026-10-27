@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Typed entry (fallback to file import). Plain EditTexts with the system T9 (guide §3a).
+     Save/Cancel are focusable rows because the T9 can swallow the right soft key. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <include layout="@layout/title_bar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:descendantFocusability="afterDescendants"
+            android:orientation="vertical"
+            android:padding="@dimen/gutter">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/feed_name"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_meta" />
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/focus_selector"
+                android:inputType="textCapWords"
+                android:maxLines="1"
+                android:minHeight="@dimen/row_min_height"
+                android:paddingStart="10dp"
+                android:paddingEnd="@dimen/gutter"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_body" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/feed_url"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_meta" />
+
+            <EditText
+                android:id="@+id/url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/focus_selector"
+                android:inputType="textUri|textMultiLine"
+                android:maxLines="4"
+                android:minHeight="@dimen/row_min_height"
+                android:paddingStart="10dp"
+                android:paddingEnd="@dimen/gutter"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_label" />
+
+            <TextView
+                android:id="@+id/error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/error"
+                android:textSize="@dimen/text_meta"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/color_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/focus_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/row_min_height"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="@dimen/gutter">
+
+                <View
+                    android:id="@+id/color_swatch"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp" />
+
+                <TextView
+                    android:id="@+id/color_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_body" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/enabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/focus_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/row_min_height"
+                android:paddingStart="10dp"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_body" />
+
+            <Button
+                android:id="@+id/save"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/focus_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:minHeight="@dimen/row_min_height"
+                android:stateListAnimator="@null"
+                android:text="@string/feed_save"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_body" />
+
+            <Button
+                android:id="@+id/cancel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/focus_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:minHeight="@dimen/row_min_height"
+                android:stateListAnimator="@null"
+                android:text="@string/feed_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_body" />
+        </LinearLayout>
+    </ScrollView>
+
+    <include layout="@layout/softkey_bar" />
+</LinearLayout>

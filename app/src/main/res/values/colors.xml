@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Named colour roles (AGENTS.md §10). Layouts use these, never raw hex. -->
+<resources>
+    <color name="background">#FF000000</color>
+    <color name="surface">#FF121212</color>
+    <color name="surface_header">#FF1E1E1E</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB3B3B3</color>
+    <color name="accent">#FF4DB6AC</color>
+    <color name="focus_fill">#404DB6AC</color>
+    <color name="error">#FFFF8A80</color>
+    <color name="divider">#FF333333</color>
+</resources>

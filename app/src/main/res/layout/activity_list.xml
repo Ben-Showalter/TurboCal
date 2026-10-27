@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Agenda, Day and Settings: title, one list, soft keys. The ListView owns
+     focus and draws the shared selector on the selected row (guide §2). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <include layout="@layout/title_bar" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:cacheColorHint="@android:color/transparent"
+        android:divider="@color/divider"
+        android:dividerHeight="1dp"
+        android:drawSelectorOnTop="true"
+        android:focusable="true"
+        android:focusableInTouchMode="false"
+        android:listSelector="@drawable/list_row_selector"
+        android:overScrollMode="never"
+        android:scrollbars="vertical" />
+
+    <include layout="@layout/softkey_bar" />
+</LinearLayout>
