@@ -1,0 +1,35 @@
+# Every dependency TurboCal may use. Adding one needs a reason in the PR (AGENTS.md §2).
+[versions]
+ical4j = "3.2.19"
+coroutines = "1.9.0"
+room = "2.6.1"
+work = "2.9.1"
+core-ktx = "1.15.0"
+desugar = "2.1.3"
+junit4 = "4.13.2"
+orgjson = "20240303"
+robolectric = "4.14.1"
+androidx-test-core = "1.6.1"
+androidx-test-ext = "1.2.1"
+androidx-test-runner = "1.6.2"
+
+[libraries]
+ical4j = { module = "org.mnode.ical4j:ical4j", version.ref = "ical4j" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+# org.json is built into Android; :core compiles against this copy and tests run on it.
+orgjson = { module = "org.json:json", version.ref = "orgjson" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }
+androidx-test-ext = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
