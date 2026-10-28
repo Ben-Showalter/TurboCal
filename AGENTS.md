@@ -326,7 +326,7 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 | OK (`DPAD_CENTER` or `ENTER`) | open the focused item | Month: open selected day |
 | Back / Clear | calendar views: **exit** (next launch reopens that view); elsewhere: back | text fields: Clear deletes a character |
 | D-pad up/down | move focus | no wrap at the ends |
-| D-pad left/right | Week/Day/Agenda: previous/next day · Month: move the selected day · editor rows: nudge (±1 day, ±15 min, next repeat) | skip while an `EditText` has focus |
+| D-pad left/right | Week/Day/Agenda: previous/next day · Month: along the week row; past Saturday (the row's last column) → next month, past Sunday → previous month, same weekday and row (`MonthNav.moveHorizontal`) · editor rows: nudge (±1 day, ±15 min, next repeat) | skip while an `EditText` has focus |
 | `1` / `3` | previous / next day (Day, Agenda), week (Week) or month (Month) | on the editor's date/time rows digits open the picker instead (`wantsDigits()`) |
 | `5` | jump to today | |
 | `0` | sync now (throttled) | |
@@ -344,7 +344,9 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
   6 dp teal bar) for list rows (`list_row_selector`) and for buttons and fields
   (`focus_selector`). The month grid draws a filled teal cell. Every screen sets its starting
   focus (Agenda: today's first event or its "No events" row; Day: first row; Month: the grid on
-  today). `RowAdapter.submit` keeps the selection on the same row (stable ids) when sync changes
+  today). **The four calendar views use rounded selection boxes** (`list_row_selector_rounded`
+  via `CalendarActivity.useRoundedSelector`, and a rounded selected cell in `MonthGridView`);
+  Settings, dialogs and editors keep the square shared highlight (owner, round 4). `RowAdapter.submit` keeps the selection on the same row (stable ids) when sync changes
   the data.
 
 ## 9. In-app updates (from day one) with manual APK releases

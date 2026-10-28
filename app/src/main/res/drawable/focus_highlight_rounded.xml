@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- focus_highlight with rounded corners, for the four calendar views only (owner, round 4).
+     Same layers: tinted fill, 2dp teal outline, 6dp teal leading bar. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/tcFocusFill" />
+            <stroke android:width="2dp" android:color="?attr/tcAccent" />
+            <corners android:radius="@dimen/focus_corner" />
+        </shape>
+    </item>
+    <item android:gravity="start|fill_vertical" android:width="@dimen/focus_bar">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/tcAccent" />
+            <corners
+                android:bottomLeftRadius="@dimen/focus_corner"
+                android:bottomRightRadius="0dp"
+                android:topLeftRadius="@dimen/focus_corner"
+                android:topRightRadius="0dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -51,7 +51,9 @@ class MonthActivity : CalendarActivity() {
         grid = findViewById(R.id.grid)
         dayInfo = findViewById(R.id.day_info)
         grid.listener = object : MonthGridView.Listener {
-            override fun onMove(dx: Int, dy: Int) = select(MonthNav.move(selected, dx, dy))
+            // LEFT/RIGHT page months at the row ends; UP/DOWN move a week.
+            override fun onMove(dx: Int, dy: Int) =
+                select(if (dy == 0) MonthNav.moveHorizontal(selected, dx, firstDayOfWeek) else MonthNav.move(selected, dx, dy))
             override fun onOpen() = jump(intentFor(this@MonthActivity, DayActivity::class.java, selected))
         }
         observeStatus()

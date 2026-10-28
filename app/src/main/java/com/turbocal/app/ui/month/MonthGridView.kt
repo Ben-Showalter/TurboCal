@@ -71,6 +71,7 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
     private val line = Paint().apply { color = gridLine; strokeWidth = dp(1f) }
     private val border = Paint().apply { style = Paint.Style.STROKE; strokeWidth = dp(3f); color = accent }
     private val rect = RectF()
+    private val corner = dp(5f)
 
     init {
         isFocusable = true
@@ -142,12 +143,14 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
             }
             if (isSelected) {
                 fill.color = focusFill
-                canvas.drawRect(rect, fill)
+                val inset = dp(1.5f)
+                canvas.drawRoundRect(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset, corner, corner, fill)
             }
 
             // Day number, on an accent circle for today.
-            val nx = left + pad + dp(1f)
-            val ny = top + pad + number.textSize
+            // Inset past the rounded selection border so today's circle isn't clipped.
+            val nx = left + dp(6f)
+            val ny = top + dp(3f) + number.textSize
             number.isFakeBoldText = isSelected || cell.isToday // stock font has no bold (guide §4)
             if (cell.isToday) {
                 fill.color = accent
@@ -185,13 +188,13 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
             canvas.drawLine(0f, y, width.toFloat(), y, line)
         }
 
-        // Selection border last, over the lines.
+        // Selection border last, over the lines, with rounded corners (owner, round 4).
         val si = g.cells.indexOfFirst { it.date == selected }
         if (si >= 0) {
-            val half = border.strokeWidth / 2
+            val inset = border.strokeWidth / 2 + dp(1.5f)
             val left = cellW * (si % 7)
             val top = headerH + cellH * (si / 7)
-            canvas.drawRect(left + half, top + half, left + cellW - half, top + cellH - half, border)
+            canvas.drawRoundRect(left + inset, top + inset, left + cellW - inset, top + cellH - inset, corner, corner, border)
         }
     }
 }

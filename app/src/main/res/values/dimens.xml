@@ -9,6 +9,8 @@
     <dimen name="row_min_height">40dp</dimen>
     <dimen name="color_bar">4dp</dimen>
     <dimen name="focus_bar">6dp</dimen>
+    <!-- Rounded selection boxes in the four calendar views. -->
+    <dimen name="focus_corner">6dp</dimen>
     <dimen name="gutter">6dp</dimen>
     <dimen name="day_info_line">18dp</dimen>
     <!-- Month view: header line + 3 event lines (4 × day_info_line); the grid fills the rest. -->

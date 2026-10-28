@@ -37,7 +37,7 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 | **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Go to today, Settings, show/hide disabled |
 | OK | Open the selected event or day |
 | D-pad up/down | Move |
-| D-pad left/right | Month: move the selected day · Week/Day/Agenda: previous/next day |
+| D-pad left/right | Month: move along the week; past Saturday it pages to next month (past Sunday, the previous month), same weekday and row · Week/Day/Agenda: previous/next day |
 | `1` / `3` | Previous / next month (Month), week (Week) or day (Day, Agenda) |
 | `5` | Jump to today |
 | `0` | Sync now |

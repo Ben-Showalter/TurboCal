@@ -47,9 +47,33 @@ data class MonthGrid(val month: YearMonth, val firstDayOfWeek: DayOfWeek, val ce
     }
 }
 
-/** D-pad movement in the month grid: the selection moves by day or week and may leave the month. */
+/** D-pad movement in the month grid. */
 object MonthNav {
+    /** Up/down (and any plain day/week offset): may leave the month. */
     fun move(selected: LocalDate, dx: Int, dy: Int): LocalDate = selected.plusDays(dx + 7L * dy)
+
+    /**
+     * LEFT/RIGHT (owner, round 4): move along the week row; past the row's end
+     * (Saturday for a Sunday start) page to the next month, past its start to the
+     * previous month, landing on the same weekday in the same row of that month's
+     * grid. If that cell belongs to a neighbouring month (top or bottom rows), it
+     * steps a week at a time back into the target month.
+     */
+    fun moveHorizontal(selected: LocalDate, dx: Int, firstDayOfWeek: DayOfWeek): LocalDate {
+        val col = Math.floorMod(selected.dayOfWeek.value - firstDayOfWeek.value, 7)
+        val target = col + dx
+        if (target in 0..6) return selected.plusDays(dx.toLong())
+        // The selection may sit on a greyed day of the neighbouring month; page from the
+        // month the grid is showing, which is the selected date's own month.
+        val shown = YearMonth.from(selected)
+        val (start, _) = MonthGrid.range(shown, firstDayOfWeek)
+        val row = ((selected.toEpochDay() - start.toEpochDay()) / 7).toInt()
+        val next = if (dx > 0) shown.plusMonths(1) else shown.minusMonths(1)
+        val (nextStart, _) = MonthGrid.range(next, firstDayOfWeek)
+        var d = nextStart.plusDays(row * 7L + col)
+        while (YearMonth.from(d) != next) d = d.plusWeeks(if (d.isBefore(next.atDay(1))) 1 else -1)
+        return d
+    }
 
     /** 1 / 3: previous / next month, keeping the day of month where it exists. */
     fun shiftMonth(selected: LocalDate, months: Int): LocalDate = selected.plusMonths(months.toLong())

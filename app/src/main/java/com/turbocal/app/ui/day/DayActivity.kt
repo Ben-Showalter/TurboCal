@@ -30,6 +30,7 @@ class DayActivity : CalendarActivity() {
         setContentView(R.layout.activity_list)
         setSoftkeys(getString(R.string.key_view), getString(R.string.key_open), getString(R.string.key_options))
         list = findViewById(R.id.list)
+        useRoundedSelector(list)
         adapter = RowAdapter(layoutInflater, ::calendarColor)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, position, _ ->

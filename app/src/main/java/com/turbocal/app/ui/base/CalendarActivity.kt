@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ListView
 import android.text.format.DateFormat
 import com.turbocal.app.R
 import com.turbocal.app.data.CalendarView
@@ -62,6 +63,11 @@ abstract class CalendarActivity : FlipBaseActivity() {
             openedOn = today
             jump(intentFor(this, javaClass, today))
         }
+    }
+
+    /** The calendar views' lists use the rounded selection box (owner, round 4); Settings keeps the square one. */
+    protected fun useRoundedSelector(list: ListView) {
+        list.selector = getDrawable(R.drawable.list_row_selector_rounded)
     }
 
     /** Call after setContentView: wires the status line. */

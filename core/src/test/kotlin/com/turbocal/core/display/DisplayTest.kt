@@ -90,6 +90,30 @@ class DisplayTest {
         assertEquals("Dec 27 – Jan 2, 2027", fmt.weekTitle(LocalDate.of(2026, 12, 27), today))
     }
 
+    @Test fun `left and right page months at the row ends, same weekday and row`() {
+        val sun = DayOfWeek.SUNDAY
+        // Inside a row: one day.
+        assertEquals(LocalDate.of(2026, 10, 28), MonthNav.moveHorizontal(today, 1, sun))
+        assertEquals(LocalDate.of(2026, 10, 26), MonthNav.moveHorizontal(today, -1, sun))
+        // Sat Oct 31 is row 4 of October's grid; row 4's Saturday in November's grid is Nov 28.
+        assertEquals(LocalDate.of(2026, 11, 28), MonthNav.moveHorizontal(LocalDate.of(2026, 10, 31), 1, sun))
+        // Sun Oct 4 is row 1; row 1's Sunday in September's grid (starts Aug 30) is Sep 6.
+        assertEquals(LocalDate.of(2026, 9, 6), MonthNav.moveHorizontal(LocalDate.of(2026, 10, 4), -1, sun))
+        // Sat Oct 3 is row 0; November's grid row 0 Saturday is Nov 7 (Nov 1 is a Sunday).
+        assertEquals(LocalDate.of(2026, 11, 7), MonthNav.moveHorizontal(LocalDate.of(2026, 10, 3), 1, sun))
+        // Sat Dec 26 is row 3 of December (grid starts Nov 29) → January's grid (starts Dec 27) row 3 Saturday: Jan 23.
+        assertEquals(LocalDate.of(2027, 1, 23), MonthNav.moveHorizontal(LocalDate.of(2026, 12, 26), 1, sun))
+        // Bottom row, LEFT: Sun Jan 31 2027 is row 5; December's row 5 Sunday is Jan 3, so step back into December: Dec 27.
+        assertEquals(LocalDate.of(2026, 12, 27), MonthNav.moveHorizontal(LocalDate.of(2027, 1, 31), -1, sun))
+        // Top row, LEFT: Sun Nov 1 2026 (row 0) → October grid row 0 Sunday is Sep 27, clamp to Oct 4.
+        assertEquals(LocalDate.of(2026, 10, 4), MonthNav.moveHorizontal(LocalDate.of(2026, 11, 1), -1, sun))
+        // Monday week start: Sunday is the last column.
+        val mon = DayOfWeek.MONDAY
+        // Sun Oct 25 is row 3 of a Monday-start October (grid starts Sep 28); November starts Oct 26 → Nov 22.
+        assertEquals(LocalDate.of(2026, 11, 22), MonthNav.moveHorizontal(LocalDate.of(2026, 10, 25), 1, mon))
+        assertEquals(LocalDate.of(2026, 10, 27), MonthNav.moveHorizontal(LocalDate.of(2026, 10, 26), 1, mon))
+    }
+
     @Test fun `month navigation`() {
         assertEquals(LocalDate.of(2026, 11, 3), MonthNav.move(today, 0, 1))
         assertEquals(LocalDate.of(2026, 10, 26), MonthNav.move(today, -1, 0))
