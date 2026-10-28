@@ -17,6 +17,7 @@ import com.turbocal.app.sync.SyncScheduler
 import com.turbocal.app.sync.SyncState
 import com.turbocal.app.ui.base.CalendarActivity
 import com.turbocal.app.ui.base.FlipBaseActivity
+import com.turbocal.app.notify.BackgroundAccess
 import com.turbocal.app.ui.calendars.CalendarsActivity
 import com.turbocal.app.ui.eventedit.KeypadPicker
 import com.turbocal.core.notify.Reminders
@@ -73,7 +74,7 @@ class SettingsActivity : FlipBaseActivity() {
         list.setOnItemClickListener { _, _, position, _ -> onItem(adapter.items[position]) }
 
         scope.launch {
-            combine(graph.repository.feeds, SyncState.running, graph.updates.state, graph.prefs.showDisabled) { f, s, u, _ ->
+            combine(graph.repository.feeds, SyncState.running, graph.updates.state) { f, s, u ->
                 State(f, s, u)
             }.collect { st ->
                 feeds = st.feeds
@@ -83,6 +84,12 @@ class SettingsActivity : FlipBaseActivity() {
             }
         }
         list.requestFocus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Back from the battery settings: refresh "Run in background".
+        if (::list.isInitialized && page == Page.NOTIFICATIONS) render()
     }
 
     private data class State(val feeds: List<FeedEntity>, val syncing: Boolean, val update: UpdateStatus)
@@ -153,6 +160,10 @@ class SettingsActivity : FlipBaseActivity() {
                 "notify_cover", getString(R.string.notify_cover),
                 getString(if (graph.prefs.coverCards) R.string.on else R.string.off) + " · " + getString(R.string.notify_cover_sub), 4,
             )
+            items += Item.Action(
+                "background", getString(R.string.background_row),
+                getString(if (BackgroundAccess.isExempt(this)) R.string.background_allowed else R.string.background_not_allowed), 6,
+            )
             items += Item.Action("notify_test", getString(R.string.notify_test), "", 5)
         }
         return items
@@ -168,10 +179,6 @@ class SettingsActivity : FlipBaseActivity() {
         val badge = (updateStatus as? UpdateStatus.Available)?.let { " · " + getString(R.string.update_badge, it.info.tag) } ?: ""
         return listOf(
             Item.Action("theme", getString(R.string.settings_theme), graph.prefs.theme.label, 1),
-            Item.Action(
-                "disabled", getString(R.string.settings_show_disabled),
-                getString(if (graph.prefs.showDisabled.value) R.string.on else R.string.off), 2,
-            ),
             Item.Action("update", getString(R.string.settings_update), getString(R.string.update_installed, graph.updates.currentVersion()) + badge, 3),
             Item.Action("keys", getString(R.string.menu_keys), "", 4),
         )
@@ -203,12 +210,12 @@ class SettingsActivity : FlipBaseActivity() {
                     graph.prefs.coverCards = !graph.prefs.coverCards
                     render()
                 }
+                item.key == "background" -> BackgroundAccess.request(this)
                 item.key == "notify_test" -> {
                     graph.reminders.sendTest()
                     toast(R.string.notify_test_sent)
                 }
                 item.key == "theme" -> toggleTheme()
-                item.key == "disabled" -> graph.prefs.setShowDisabled(!graph.prefs.showDisabled.value)
                 item.key == "update" -> startActivity(Intent(this, UpdateActivity::class.java))
                 item.key == "keys" -> onOptionsKey()
             }

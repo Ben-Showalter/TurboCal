@@ -2,22 +2,11 @@ package com.turbocal.app.data
 
 import android.content.Context
 import com.turbocal.core.notify.ReminderSettings
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalTime
 
 /** Small settings in app-private SharedPreferences. Never holds a feed URL. */
 class Prefs(context: Context) {
     private val sp = context.getSharedPreferences("turbocal", Context.MODE_PRIVATE)
-
-    private val _showDisabled = MutableStateFlow(sp.getBoolean(KEY_SHOW_DISABLED, false))
-    val showDisabled: StateFlow<Boolean> = _showDisabled.asStateFlow()
-
-    fun setShowDisabled(show: Boolean) {
-        sp.edit().putBoolean(KEY_SHOW_DISABLED, show).apply()
-        _showDisabled.value = show
-    }
 
     /** Minutes between background syncs; 0 = manual only. */
     var syncIntervalMinutes: Int
@@ -64,6 +53,10 @@ class Prefs(context: Context) {
         get() = sp.getLong(KEY_LAST_REMINDER, -1).takeIf { it >= 0 }
         set(v) = sp.edit().putLong(KEY_LAST_REMINDER, v ?: -1).apply()
 
+    var askedBatteryExemption: Boolean
+        get() = sp.getBoolean(KEY_ASKED_BATTERY, false)
+        set(v) = sp.edit().putBoolean(KEY_ASKED_BATTERY, v).apply()
+
     var askedNotifyPermission: Boolean
         get() = sp.getBoolean(KEY_ASKED_NOTIFY, false)
         set(v) = sp.edit().putBoolean(KEY_ASKED_NOTIFY, v).apply()
@@ -96,9 +89,9 @@ class Prefs(context: Context) {
         private const val KEY_COVER = "notify_cover"
         private const val KEY_LAST_REMINDER = "notify_last_at"
         private const val KEY_ASKED_NOTIFY = "notify_asked_permission"
+        private const val KEY_ASKED_BATTERY = "notify_asked_battery"
         private const val KEY_THEME = "theme"
         private const val KEY_LAST_VIEW = "last_view"
-        private const val KEY_SHOW_DISABLED = "show_disabled"
         private const val KEY_INTERVAL = "sync_interval_min"
         private const val KEY_CLEAN_SYNC = "last_clean_sync"
         private const val KEY_UPDATE_CHECK = "last_update_check"

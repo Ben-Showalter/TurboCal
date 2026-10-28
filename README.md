@@ -22,9 +22,8 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 
 - **Month:** a grid of blocks. Each event is a full-width stripe in its calendar's colour,
   stacked inside the day's block, with "+N" when they don't all fit. Under the grid you see
-  every event of the selected day, one per line. On a busy day the grid gets shorter to
-  make room, and grows back on a quiet day. Only on a very busy day (about 12 or more
-  events) does the last line say "+N more – OK opens the day".
+  the selected day's events, one per line. That area always has room for at least 3 and
+  grows to at most 5; with more than 5 events the last line says "+N more – OK opens the day".
 - **Week:** titled "This week", "Next week" or "Last week" (otherwise the dates); the seven
   days of the week (starting on your locale's first weekday), each with a
   header, including empty days.
@@ -36,7 +35,7 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 | Key | Does |
 |---|---|
 | **Left soft key** (or `7`) | **View**: Month → Week → Day → Agenda → Month |
-| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Go to today, Settings, Calendars, show/hide hidden calendars |
+| **Right soft key** (or `9`, or MENU) | **Options**: New event, Calendars, Sync now, Go to today, Settings |
 | OK | Open the selected event or day |
 | D-pad up/down | Move |
 | D-pad left/right | Previous/next day (in Month it wraps to the next or previous week) |
@@ -44,7 +43,6 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 | `5` | Jump to today |
 | `0` | Sync now |
 | `*` | Settings |
-| `#` | Show / hide disabled calendars |
 | Back / Clear | Back to the previous screen, including the previous view |
 | End | Go to the phone's home screen (TurboCal reopens on the view you left) |
 
@@ -71,6 +69,7 @@ Settings → **Notifications**:
 | Notify | When the event starts, or 5 / 10 / 15 / 30 min before |
 | All-day events at | Opens the time picker |
 | Outer display | On / Off |
+| Run in background | Lets reminders and sync run without the battery saver delaying them. TurboCal asks once on first start; if the phone shows a list instead, find TurboCal, press OK, choose **Don't optimize**, then press Back |
 | Send a test notification | Checks sound, vibration, light and the outer display now |
 
 Sound and vibration follow the phone's settings for TurboCal's "Event starts" notifications.
@@ -80,7 +79,7 @@ Sound and vibration follow the phone's settings for TurboCal's "Event starts" no
 Options → **Calendars** (or Settings → Calendars) lists every calendar with its status:
 
 - **OK** shows or hides the selected calendar. Hidden calendars keep syncing, so showing one
-  again is instant. `#` temporarily shows hidden ones in the views.
+  again is instant.
 - **Left soft key – Edit:** rename or recolour, sync now (or export, for the phone calendar),
   delete.
 - **Right soft key – Add:** import feeds from a file, type a calendar link, or import an .ics
@@ -93,7 +92,7 @@ Options → **Calendars** (or Settings → Calendars) lists every calendar with 
 - **Sync:** Sync now, and how often to sync in the background.
 - **Notifications:** see above.
 - **Calendars:** opens the Calendars screen.
-- **App:** Theme (Light or Dark, OK to switch; Light is the default), Show hidden calendars,
+- **App:** Theme (Light or Dark, OK to switch; Light is the default),
   Software update, Key help.
 
 ## The "On this phone" calendar

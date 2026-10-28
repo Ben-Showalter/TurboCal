@@ -90,27 +90,19 @@ class MonthActivity : CalendarActivity() {
     }
 
     /**
-     * Every event of the selected day under the grid, one line each in Day-view
-     * order. The list is as tall as it needs; the grid (weight 1) shrinks by just
-     * that much, down to month_grid_min_height. Only past that does the last
-     * line become "+N more – OK opens the day". Not focusable; focus stays on
-     * the grid.
+     * The selected day's events under the grid, one line each in Day-view
+     * order: up to [MAX_LINES], or the first four and "+N more – OK opens the
+     * day". The area is always at least 3 lines tall (day_info_min_height), so
+     * the grid only changes between the 3- and 5-line sizes. Not focusable;
+     * focus stays on the grid.
      */
     private fun renderDayInfo() {
         val rows = DayBuilder.build(events, selected, zone, formats).filterIsInstance<Row.Event>()
         dayInfo.removeAllViews()
         val lineH = resources.getDimensionPixelSize(R.dimen.day_info_line)
         dayInfo.addView(infoText(formats.dayInfoHeader(selected, today, rows.size), header = true), ViewGroup.LayoutParams.MATCH_PARENT, lineH)
-        // Grid and list share this space, so the sum doesn't change as the list grows.
-        val shared = grid.height + dayInfo.height
-        if (shared == 0) {
-            // Not laid out yet: fill in once the height is known.
-            dayInfo.post { if (grid.height + dayInfo.height > 0) renderDayInfo() }
-            return
-        }
-        val minGrid = resources.getDimensionPixelSize(R.dimen.month_grid_min_height)
-        val lines = ((shared - minGrid - dayInfo.paddingTop - dayInfo.paddingBottom) / lineH - 1).coerceAtLeast(1)
-        val fit = if (rows.size <= lines) rows.size else (lines - 1).coerceAtLeast(0)
+        // Owner, round 8: at most 5 event lines; past that 4 events and "+N more".
+        val fit = if (rows.size <= MAX_LINES) rows.size else MAX_LINES - 1
         for (r in rows.take(fit)) {
             val v = layoutInflater.inflate(R.layout.row_day_info, dayInfo, false)
             v.findViewById<View>(R.id.color_bar).setBackgroundColor(calendarColor(r.color))
@@ -141,4 +133,8 @@ class MonthActivity : CalendarActivity() {
     override fun step(direction: Int) = select(MonthNav.shiftMonth(selected, direction))
 
     override fun goToday() = select(today)
+
+    companion object {
+        private const val MAX_LINES = 5
+    }
 }

@@ -35,16 +35,12 @@
     <string name="menu_today">Go to today (5)</string>
     <string name="menu_settings">Settings (*)</string>
     <string name="menu_calendars">Calendars</string>
-    <string name="menu_show_disabled">Show hidden calendars (#)</string>
-    <string name="menu_hide_disabled">Stop showing hidden calendars (#)</string>
     <string name="menu_keys">Key help</string>
 
     <string name="status_syncing">Syncing…</string>
     <string name="status_no_feeds">No calendars - press * to add one</string>
     <string name="status_phone_only">Phone calendar only</string>
     <string name="status_error">Sync problem - see Settings</string>
-    <string name="toast_showing_disabled">Showing hidden calendars</string>
-    <string name="toast_hiding_disabled">Hidden calendars hidden again</string>
     <string name="toast_sync_started">Syncing…</string>
     <string name="toast_offline">No connection - will sync when online</string>
     <string name="toast_no_links">No calendar links to sync - add one in Settings (*)</string>
@@ -65,7 +61,6 @@
     <string name="settings_import">Import feeds from file</string>
     <string name="settings_import_sub">Download/turbocal_feeds.json</string>
     <string name="settings_add">Add calendar by typing a link</string>
-    <string name="settings_show_disabled">Show hidden calendars</string>
     <string name="settings_update">Software update</string>
     <string name="settings_header_sync">Sync</string>
     <string name="settings_header_calendars">Calendars</string>
@@ -79,6 +74,10 @@
     <string name="notify_cover">Outer display</string>
     <string name="notify_cover_sub">Shows the reminder with the time while the flip is closed</string>
     <string name="notify_test">Send a test notification</string>
+    <string name="background_row">Run in background</string>
+    <string name="background_allowed">Allowed</string>
+    <string name="background_not_allowed">Battery saver may delay reminders - OK to allow</string>
+    <string name="background_steps">Find TurboCal, press OK, choose Don\'t optimize, then press Back.</string>
     <string name="notify_test_sent">Test notification sent</string>
     <string name="notify_summary_on">On · %1$s · all-day %2$s</string>
     <string name="notify_channel">Event starts</string>
@@ -190,6 +189,6 @@
     <string name="update_badge">Update available: %1$s</string>
     <string name="update_allow_sources">Allow installs: select TurboCal, press OK to turn on, then press Back.</string>
 
-    <string name="keys_help">View (left key or 7): Month, Week, Day, Agenda\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day, week or month\n5: today\n0: sync now\n*: Settings\n#: show/hide hidden calendars\nBack: exit (the app reopens this view)</string>
+    <string name="keys_help">View (left key or 7): Month, Week, Day, Agenda\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day, week or month\n5: today\n0: sync now\n*: Settings\nBack: previous screen\nEnd: home screen</string>
     <string name="unhandled_key">KEY %1$d</string>
 </resources>

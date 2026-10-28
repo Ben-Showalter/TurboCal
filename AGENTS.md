@@ -70,7 +70,7 @@ When you learn a new device quirk while working here, add it to the guide as wel
 - Manifest: `touchscreen required="false"`, the flip `configChanges` from the guide, portrait
   lock, `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES` (§9), reminders:
   `POST_NOTIFICATIONS` (asked at runtime only on API 33+), `VIBRATE`, `RECEIVE_BOOT_COMPLETED`,
-  `SCHEDULE_EXACT_ALARM` (`maxSdkVersion 32`) / `USE_EXACT_ALARM`,
+  `SCHEDULE_EXACT_ALARM` (`maxSdkVersion 32`) / `USE_EXACT_ALARM`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`,
   `READ_EXTERNAL_STORAGE` with `maxSdkVersion="32"` (feed import, §7), `allowBackup="false"`.
 - **No DI framework.** Use one hand-written `AppGraph` created in `TurboCalApp`. The app is too
   small to justify Hilt.
@@ -216,7 +216,8 @@ named compatibility quirks below.
   "No connection", "Feed not found (404) - check the link", "Not an iCalendar feed",
   "Server error (503)". Never put the URL in the error.
 - **Hidden calendars still sync** (owner, round 6): `enabled` only means "shown". Hidden
-  calendars' events are fetched and stored but left out of the views; `#` shows them for a while.
+  calendars' events are fetched and stored but left out of the views (round 8 removed the
+  "show hidden" toggle: the Calendars screen shows/hides each calendar).
 
 ## 6. Tests — what your change must include
 
@@ -295,10 +296,10 @@ Screens:
   - Month: the grid fills all the height the screen has (the E4810 runs at ~0.75 density, so
     never size it in fixed dp); a grid of bordered blocks (every edge snapped to whole pixels so
     no line vanishes at 0.75 density), 16sp day numbers, and one thin full-width line per event
-    (2 dp, 2 dp apart) stacked in each block, "+N" when they don't fit. Under it, **every** event of the focused day, one line each:
-    the list is as tall as that day needs and the grid shrinks only by that much, down to
-    `month_grid_min_height`; "+N more – OK opens the day" appears only past that (owner,
-    round 5: no fixed-size band).
+    (2 dp, 2 dp apart) stacked in each block, "+N" when they don't fit. Under it, the focused day's events, one line each: the
+    list is always room for **3 to 5 event lines** (`day_info_min_height` = header + 3; at most
+    5 filled in, the 5th becoming "+N more – OK opens the day" past that), so the grid only
+    moves between those two sizes (owner, round 8).
   - Week: 7 days, every day with a header, empty days included; the week starts on the
     locale's first day. Title "This week" / "Next week" / "Last week", otherwise the dates.
   - Day: all-day events at the top.
@@ -313,7 +314,7 @@ Screens:
   key **Add** (import feeds file, type a link, import .ics into the phone calendar).
 - **Settings** is a menu: **Sync** (Sync now, interval), **Notifications** (on/off, lead time,
   all-day time, outer display, test), **Calendars** (opens the screen above), **App** (theme,
-  show hidden calendars, software update, key help).
+  software update, key help).
 
 ### Notifications (owner, round 7)
 - **On by default, 5 minutes before** (choices: at start, 5/10/15/30 min before). All-day events
@@ -326,8 +327,16 @@ Screens:
   alarms). It's re-armed after every sync, phone-calendar edit, settings change, boot/update, app
   start and clock or zone change. At fire time the group is re-read from the database, and
   `lastReminderAt` stops repeats; a group missed by over 10 minutes (phone off) isn't posted late.
-- **Channel** "Event starts" (high importance, sound, vibration, LED) plus `setLights(BLUE, 1, 0)`
-  per the guide. Tapping opens the Day view; the notification and its outer-display card share
+- **Max priority** (owner, round 8): channel `event_starts_v2` "Event starts" (IMPORTANCE_HIGH,
+  the highest an app can set; the old `event_starts` channel is deleted because Android never
+  raises an existing channel's importance), sound, vibration, LED, public on the lock screen;
+  each notification is `CATEGORY_REMINDER` + `PRIORITY_MAX`, plus `setLights(BLUE, 1, 0)` per
+  the guide. No screen wake.
+- **Run in background** (owner, round 8): `BackgroundAccess` asks for the battery-optimization
+  exemption (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) once at startup (one prompt per start,
+  after the API 33 notification ask) and from Settings > Notifications > Run in background;
+  if the per-app dialog is refused or missing it opens the general list with a toast of D-pad
+  steps (guide: OEM deep links unreliable, some carrier builds refuse). Tapping opens the Day view; the notification and its outer-display card share
   one id (the reminder minute), so cancel always matches post.
 - **Outer display** (`CoverScreenNotifier`, guide docs/platform.md "Outer display and LED"): one
   line with the time in front ("9:25 AM · Dentist in 5 min"), scrolled by reposting, a duration on
@@ -360,7 +369,7 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 | Key | Everywhere | Notes |
 |---|---|---|
 | **Left soft key** / `7` | **View**: Month → Week → Day → Agenda → Month | the screen's primary action (guide §1) |
-| **Right soft key** / `9` / `MENU` | **Options** menu: New event, Sync now, Go to today, Settings, Calendars, Show/hide hidden | `AlertDialog.setItems`; Software update and Key help live in Settings > App. On the Calendars screen the right soft key is **Add** (owner) |
+| **Right soft key** / `9` / `MENU` | **Options** menu: New event, Calendars, Sync now, Go to today, Settings | `AlertDialog.setItems`; Software update and Key help live in Settings > App. On the Calendars screen the right soft key is **Add** (owner) |
 | OK (`DPAD_CENTER` or `ENTER`) | open the focused item | Month: open selected day |
 | Back / Clear | back to the previous screen (including the previous calendar view) | text fields: Clear deletes a character |
 | End | home screen | handled by the system |
@@ -370,7 +379,6 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 | `5` | jump to today | |
 | `0` | sync now (throttled) | |
 | `*` (also `NUMPAD_MULTIPLY`) | Settings | |
-| `#` | show/hide disabled calendars | toast says which |
 
 - All keys are handled in `KeyMap` / `FlipBaseActivity`, never in a screen. Fire one-shot actions
   on **UP**, only for a DOWN this window saw, with `repeatCount == 0`. Consume the whole MENU

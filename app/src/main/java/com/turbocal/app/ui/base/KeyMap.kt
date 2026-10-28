@@ -3,7 +3,7 @@ package com.turbocal.app.ui.base
 import android.view.KeyEvent
 
 /** What a key means in TurboCal (AGENTS.md §8). The only place that reads keycodes. */
-enum class Key { PRIMARY, OPTIONS, LEFT, RIGHT, PREV, NEXT, TODAY, SYNC, SETTINGS, TOGGLE_DISABLED }
+enum class Key { PRIMARY, OPTIONS, LEFT, RIGHT, PREV, NEXT, TODAY, SYNC, SETTINGS }
 
 object KeyMap {
 
@@ -19,7 +19,6 @@ object KeyMap {
         KeyEvent.KEYCODE_5 -> Key.TODAY
         KeyEvent.KEYCODE_0 -> Key.SYNC
         KeyEvent.KEYCODE_STAR, KeyEvent.KEYCODE_NUMPAD_MULTIPLY -> Key.SETTINGS
-        KeyEvent.KEYCODE_POUND -> Key.TOGGLE_DISABLED
         else -> null
     }
 
@@ -28,6 +27,8 @@ object KeyMap {
         KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_CALL, KeyEvent.KEYCODE_ENDCALL, KeyEvent.KEYCODE_HOME,
         KeyEvent.KEYCODE_POWER, KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_MUTE,
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+        // # had "show hidden calendars" until round 8; the Calendars screen does that now.
+        KeyEvent.KEYCODE_POUND,
         KeyEvent.KEYCODE_DEL, KeyEvent.KEYCODE_2, KeyEvent.KEYCODE_4, KeyEvent.KEYCODE_6, KeyEvent.KEYCODE_8,
         KeyEvent.KEYCODE_CAMERA, KeyEvent.KEYCODE_FOCUS, KeyEvent.KEYCODE_HEADSETHOOK, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
         -> true

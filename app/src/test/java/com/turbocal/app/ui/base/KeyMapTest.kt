@@ -24,7 +24,8 @@ class KeyMapTest {
         assertEquals(Key.SYNC, KeyMap.map(KeyEvent.KEYCODE_0))
         assertEquals(Key.SETTINGS, KeyMap.map(KeyEvent.KEYCODE_STAR))
         assertEquals(Key.SETTINGS, KeyMap.map(KeyEvent.KEYCODE_NUMPAD_MULTIPLY))
-        assertEquals(Key.TOGGLE_DISABLED, KeyMap.map(KeyEvent.KEYCODE_POUND))
+        assertNull(KeyMap.map(KeyEvent.KEYCODE_POUND))
+        assertTrue(KeyMap.isKnownUnmapped(KeyEvent.KEYCODE_POUND)) // no "KEY" toast
     }
 
     @Test fun `OK, Back and vertical D-pad stay with the system and focused view`() {

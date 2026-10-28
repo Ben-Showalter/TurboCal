@@ -28,11 +28,16 @@ class ReminderNotifier(private val context: Context, private val prefs: Prefs) {
 
     fun ensureChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        // Android never raises an existing channel's importance, so round 8's "max priority"
+        // uses a new channel id and removes the first one.
+        manager.deleteNotificationChannel(OLD_CHANNEL)
+        // IMPORTANCE_HIGH is the highest an app can set (MAX is reserved for the system).
         val channel = NotificationChannel(CHANNEL, context.getString(R.string.notify_channel), NotificationManager.IMPORTANCE_HIGH).apply {
             description = context.getString(R.string.notify_channel_desc)
             enableLights(true)
             lightColor = Color.BLUE
             enableVibration(true)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         manager.createNotificationChannel(channel)
     }
@@ -80,11 +85,13 @@ class ReminderNotifier(private val context: Context, private val prefs: Prefs) {
             .setContentIntent(open)
             .setDeleteIntent(dismissed)
             .setAutoCancel(true)
-            .setCategory(Notification.CATEGORY_EVENT)
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setPriority(Notification.PRIORITY_MAX) // owner: max priority; channels decide on API 26+
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setShowWhen(true)
             .setLights(Color.BLUE, 1, 0)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            builder.setPriority(Notification.PRIORITY_HIGH).setDefaults(Notification.DEFAULT_ALL)
+            builder.setDefaults(Notification.DEFAULT_ALL)
         }
         if (text.lines.size > 1) {
             val style = Notification.InboxStyle().setBigContentTitle(text.title)
@@ -95,7 +102,8 @@ class ReminderNotifier(private val context: Context, private val prefs: Prefs) {
     }
 
     companion object {
-        const val CHANNEL = "event_starts"
+        const val CHANNEL = "event_starts_v2"
+        private const val OLD_CHANNEL = "event_starts"
         private const val TEST_ID = 1
 
         /** One id per reminder minute, shared with the outer-display card. */

@@ -5,9 +5,7 @@ import com.turbocal.core.feeds.ExistingFeed
 import com.turbocal.core.feeds.FeedColors
 import com.turbocal.core.feeds.ImportPlan
 import com.turbocal.core.model.EventTime
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.ZoneId
@@ -17,17 +15,14 @@ class CalendarRepository(private val dao: TurboCalDao, private val prefs: Prefs)
 
     val feeds: Flow<List<FeedEntity>> = dao.feeds()
 
-    /** Events showing on any day in [from, toExclusive) in [zone]; respects the `#` toggle. */
-    @OptIn(ExperimentalCoroutinesApi::class)
+    /** Shown calendars' events on any day in [from, toExclusive) in [zone]. */
     fun events(from: LocalDate, toExclusive: LocalDate, zone: ZoneId): Flow<List<DisplayEvent>> {
         val fromInstant = from.atStartOfDay(zone).toInstant()
         val toInstant = toExclusive.atStartOfDay(zone).toInstant()
         val fromKey = fromInstant.toEpochMilli() - EventTime.KEY_SLACK_MILLIS
         val toKey = toInstant.toEpochMilli() + EventTime.KEY_SLACK_MILLIS
-        return prefs.showDisabled.flatMapLatest { show ->
-            dao.eventsBetween(fromKey, toKey, show).map { rows ->
-                rows.map { it.toDisplay() }.filter { it.time.overlaps(fromInstant, toInstant, zone) }
-            }
+        return dao.eventsBetween(fromKey, toKey, false).map { rows ->
+            rows.map { it.toDisplay() }.filter { it.time.overlaps(fromInstant, toInstant, zone) }
         }
     }
 

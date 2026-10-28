@@ -11,6 +11,7 @@ import android.widget.ListView
 import android.text.format.DateFormat
 import com.turbocal.app.R
 import com.turbocal.app.data.CalendarView
+import com.turbocal.app.notify.BackgroundAccess
 import com.turbocal.app.sync.SyncScheduler
 import com.turbocal.app.sync.SyncState
 import com.turbocal.app.ui.agenda.AgendaActivity
@@ -56,7 +57,7 @@ abstract class CalendarActivity : FlipBaseActivity() {
         super.onCreate(savedInstanceState)
         openedOn = today
         scope.launch { graph.updates.checkForUpdate(force = false) } // at most daily
-        askNotificationPermissionOnce()
+        askNotificationPermissionOnce() || askBatteryExemptionOnce()
     }
 
     override fun onResume() {
@@ -72,12 +73,24 @@ abstract class CalendarActivity : FlipBaseActivity() {
         }
     }
 
-    /** Android 13+ needs the user's yes before notifications show; ask once (the E4810, Android 9, never asks). */
-    private fun askNotificationPermissionOnce() {
-        if (Build.VERSION.SDK_INT < 33 || !graph.prefs.notifyEnabled || graph.prefs.askedNotifyPermission) return
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+    /**
+     * Android 13+ needs the user's yes before notifications show; ask once (the E4810, Android 9,
+     * never asks). Returns true when it asked, so only one prompt shows per start (guide §5).
+     */
+    private fun askNotificationPermissionOnce(): Boolean {
+        if (Build.VERSION.SDK_INT < 33 || !graph.prefs.notifyEnabled || graph.prefs.askedNotifyPermission) return false
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return false
         graph.prefs.askedNotifyPermission = true
         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+        return true
+    }
+
+    /** "Run in background" (owner, round 8): ask once at startup; Settings > Notifications can ask again. */
+    private fun askBatteryExemptionOnce(): Boolean {
+        if (!graph.prefs.notifyEnabled || graph.prefs.askedBatteryExemption || BackgroundAccess.isExempt(this)) return false
+        graph.prefs.askedBatteryExemption = true
+        BackgroundAccess.request(this)
+        return true
     }
 
     /** The calendar views' lists use the rounded selection box (owner, round 4); Settings keeps the square one. */
@@ -121,16 +134,14 @@ abstract class CalendarActivity : FlipBaseActivity() {
     }
 
     override fun onOptionsKey() {
-        // Kept short (owner): views switch with the View key; updates and key help live in Settings > App.
-        // Calendars (show/hide, add) added in round 6.
-        val showing = graph.prefs.showDisabled.value
+        // Kept short (owner): views switch with the View key; updates and key help live in
+        // Settings > App; show/hide is per calendar on the Calendars screen (round 8 order).
         val actions = listOf<Pair<String, () -> Unit>>(
             getString(R.string.menu_new_event) to { newEvent() },
+            getString(R.string.menu_calendars) to { startActivity(Intent(this, CalendarsActivity::class.java)) },
             getString(R.string.menu_sync) to { syncNow() },
             getString(R.string.menu_today) to { goToday() },
             getString(R.string.menu_settings) to { openSettings() },
-            getString(R.string.menu_calendars) to { startActivity(Intent(this, CalendarsActivity::class.java)) },
-            getString(if (showing) R.string.menu_hide_disabled else R.string.menu_show_disabled) to { toggleDisabled() },
         )
         AlertDialog.Builder(this).setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }.show()
     }
@@ -147,19 +158,12 @@ abstract class CalendarActivity : FlipBaseActivity() {
             Key.TODAY -> goToday()
             Key.SYNC -> syncNow()
             Key.SETTINGS -> openSettings()
-            Key.TOGGLE_DISABLED -> toggleDisabled()
             else -> return false
         }
         return true
     }
 
     private fun openSettings() = startActivity(Intent(this, SettingsActivity::class.java))
-
-    private fun toggleDisabled() {
-        val show = !graph.prefs.showDisabled.value
-        graph.prefs.setShowDisabled(show)
-        toast(if (show) R.string.toast_showing_disabled else R.string.toast_hiding_disabled)
-    }
 
     protected fun syncNow() = Companion.syncNow(this)
 
