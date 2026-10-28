@@ -156,7 +156,10 @@ Menu names change over time; if one has moved, look for "iCal", "ICS" or "publis
 
 ### Import from a file (recommended)
 
-Typing a 100-character link on a keypad is painful, so put the links in a file on your computer:
+Typing a 100-character link on a keypad is painful, so put the links in a file on your computer.
+Copy this into a text editor and use one line per calendar. Paste each link between the
+quotes, and put a comma after every line except the last. Save the file as exactly
+`turbocal_feeds.json`:
 
 ```json
 {
@@ -175,7 +178,14 @@ Typing a 100-character link on a keypad is painful, so put the links in a file o
 - Importing again **updates** calendars with the same link (name, colour, on/off) instead of
   adding duplicates. Entries with a bad link are skipped and counted.
 
-Push it to the phone with either command. Use the first one if the phone is on Android 10 or later.
+**No SD card needed.** `/sdcard` is Android's name for the phone's own internal storage.
+
+**Without adb (USB cable):**
+1. Plug the phone into the computer and choose **File transfer** on the phone.
+2. On the computer, open the phone's **Internal storage → Download** folder.
+3. Drop `turbocal_feeds.json` there.
+
+**With adb**, use either command. Use the first one if the phone is on Android 10 or later.
 
 ```bash
 # no permission needed (open TurboCal once first, so the folder exists)
