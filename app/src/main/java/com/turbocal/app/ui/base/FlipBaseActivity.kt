@@ -12,6 +12,7 @@ import android.widget.Toast
 import com.turbocal.app.R
 import com.turbocal.app.TurboCalApp
 import com.turbocal.app.data.AppTheme
+import com.turbocal.core.feeds.FeedColors
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -51,6 +52,12 @@ abstract class FlipBaseActivity : Activity() {
     open fun onPrimaryKey() {}
     open fun onOptionsKey() {}
 
+    /**
+     * True when the focused view takes digit keys itself (the editor's date and
+     * time rows open a picker with the digit typed). Then 0–9 skip the shortcuts.
+     */
+    protected open fun wantsDigits(): Boolean = false
+
     /** Return true if handled. LEFT/RIGHT arrive here only when [handlesHorizontalKeys]. */
     open fun onKey(key: Key): Boolean = false
 
@@ -70,6 +77,17 @@ abstract class FlipBaseActivity : Activity() {
         setTheme(if (theme == AppTheme.LIGHT) R.style.AppTheme_Light else R.style.AppTheme_Dark)
         super.onCreate(savedInstanceState)
         window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener(barFocusListener)
+    }
+
+    /** A calendar's colour as drawn in this theme (darkened on Light, see FeedColors.forTheme). */
+    fun calendarColor(color: Int): Int {
+        val a = obtainStyledAttributes(intArrayOf(R.attr.tcIsLight))
+        val light = try {
+            a.getBoolean(0, false)
+        } finally {
+            a.recycle()
+        }
+        return FeedColors.forTheme(color, light)
     }
 
     /** A colour role (R.attr.tc…) from the current theme. */
@@ -149,6 +167,8 @@ abstract class FlipBaseActivity : Activity() {
 
         val field = currentFocus as? EditText
         if (field != null) return dispatchWhileTyping(event, field)
+
+        if (code in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 && wantsDigits()) return super.dispatchKeyEvent(event)
 
         val key = KeyMap.map(code)
         if (key == null) {

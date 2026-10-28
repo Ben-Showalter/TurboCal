@@ -28,6 +28,21 @@ object FeedColors {
         return if (i < 0) PALETTE[0] else forIndex(i + step)
     }
 
+    /**
+     * The colour to draw a calendar in. On the light theme the pastel palette is
+     * darkened by [LIGHT_DARKEN] so stripes and bars stay visible on white.
+     */
+    fun forTheme(color: Int, light: Boolean): Int {
+        if (!light) return color
+        val k = 1f - LIGHT_DARKEN
+        val r = ((color shr 16 and 0xFF) * k).toInt()
+        val g = ((color shr 8 and 0xFF) * k).toInt()
+        val b = ((color and 0xFF) * k).toInt()
+        return (color and -0x1000000) or (r shl 16) or (g shl 8) or b
+    }
+
+    const val LIGHT_DARKEN = 0.35f
+
     /** `#RRGGBB` or `#AARRGGBB` → ARGB; null if malformed. */
     fun parse(hex: String?): Int? {
         val h = hex?.trim()?.removePrefix("#") ?: return null

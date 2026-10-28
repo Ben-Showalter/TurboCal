@@ -42,7 +42,7 @@ class WeekActivity : CalendarActivity() {
         setContentView(R.layout.activity_list)
         setSoftkeys(getString(R.string.key_view), getString(R.string.key_open), getString(R.string.key_options))
         list = findViewById(R.id.list)
-        adapter = RowAdapter(layoutInflater)
+        adapter = RowAdapter(layoutInflater, ::calendarColor)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, position, _ ->
             when (val row = adapter.getItem(position)) {

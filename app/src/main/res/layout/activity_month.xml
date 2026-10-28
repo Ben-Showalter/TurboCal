@@ -11,16 +11,18 @@
     <com.turbocal.app.ui.month.MonthGridView
         android:id="@+id/grid"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/month_grid_height"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:focusable="true"
         android:focusableInTouchMode="false" />
 
-    <!-- The selected day's events, filled in code: as many lines as fit, then "+N more". -->
+    <!-- The selected day's events, filled in code: a header and up to three lines, the
+         last one "+N more" when they don't fit. Fixed height so the grid never jumps;
+         the grid takes everything else. -->
     <LinearLayout
         android:id="@+id/day_info"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="@dimen/day_info_height"
         android:background="?attr/tcSurface"
         android:focusable="false"
         android:orientation="vertical"

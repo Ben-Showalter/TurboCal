@@ -106,7 +106,7 @@ class MonthActivity : CalendarActivity() {
         val fit = if (rows.size <= lines) rows.size else (lines - 1).coerceAtLeast(0)
         for (r in rows.take(fit)) {
             val v = layoutInflater.inflate(R.layout.row_day_info, dayInfo, false)
-            v.findViewById<View>(R.id.color_bar).setBackgroundColor(r.color)
+            v.findViewById<View>(R.id.color_bar).setBackgroundColor(calendarColor(r.color))
             v.findViewById<TextView>(R.id.time).text = r.timeLabel
             v.findViewById<TextView>(R.id.title).text = r.title
             dayInfo.addView(v)

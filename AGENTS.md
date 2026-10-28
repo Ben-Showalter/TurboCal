@@ -284,7 +284,8 @@ feeds**; typing is the fallback. This follows the guide's rule: never make the u
 Screens:
 - Four interchangeable calendar views, cycled with the View key: **Month** (default on first
   launch) → **Week** → **Day** → **Agenda**.
-  - Month: a grid of bordered blocks, one full-width colour stripe per event stacked in each
+  - Month: the grid fills all the height the screen has (the E4810 runs at ~0.75 density, so
+    never size it in fixed dp); a grid of bordered blocks, one full-width colour stripe per event stacked in each
     block, "+N" when they don't fit. Under it, the focused day's events, one line each, then
     "+N more – OK opens the day".
   - Week: 7 days, every day with a header, empty days included; the week starts on the
@@ -292,7 +293,10 @@ Screens:
   - Day: all-day events at the top.
   - Agenda: days with events, opening on today.
 - **Event detail**: read-only for feeds. For phone events: Edit / Delete this one / Delete.
-- **Event edit** (phone calendar): keypad steppers for dates, times and repeat.
+- **Event edit** (phone calendar): OK or any digit on a date/time row opens a **keypad picker**
+  (`KeypadPicker`, logic in core `input/KeypadEntry`, unit-tested): type the numbers (fields
+  advance by themselves; on AM/PM, 2 = AM and 7 = PM), ‹ › move between fields, ˄˅ change one,
+  OK sets, Clear deletes a digit or cancels. Left/right on the row still nudge it.
 - **Settings** is a menu of three pages, each its own screen:
   - **Sync**: Sync now, interval.
   - **Calendars**: import feeds, add a link, phone calendar import/export, every calendar with
@@ -318,12 +322,12 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 | Key | Everywhere | Notes |
 |---|---|---|
 | **Left soft key** / `7` | **View**: Month → Week → Day → Agenda → Month | the screen's primary action (guide §1) |
-| **Right soft key** / `9` / `MENU` | **Options** menu: New event, Sync now, Today, Go to <view>, Settings, Show/hide disabled, Software update, Key help | `AlertDialog.setItems` |
+| **Right soft key** / `9` / `MENU` | **Options** menu, kept to five: New event, Sync now, Go to today, Settings, Show/hide disabled | `AlertDialog.setItems`; Software update and Key help live in Settings > App |
 | OK (`DPAD_CENTER` or `ENTER`) | open the focused item | Month: open selected day |
 | Back / Clear | calendar views: **exit** (next launch reopens that view); elsewhere: back | text fields: Clear deletes a character |
 | D-pad up/down | move focus | no wrap at the ends |
-| D-pad left/right | Week/Day/Agenda: previous/next day · Month: move the selected day · editor steppers: change value | skip while an `EditText` has focus |
-| `1` / `3` | previous / next day (Day, Agenda), week (Week) or month (Month); editor: bigger step | |
+| D-pad left/right | Week/Day/Agenda: previous/next day · Month: move the selected day · editor rows: nudge (±1 day, ±15 min, next repeat) | skip while an `EditText` has focus |
+| `1` / `3` | previous / next day (Day, Agenda), week (Week) or month (Month) | on the editor's date/time rows digits open the picker instead (`wantsDigits()`) |
 | `5` | jump to today | |
 | `0` | sync now (throttled) | |
 | `*` (also `NUMPAD_MULTIPLY`) | Settings | |
@@ -411,7 +415,11 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
     for bars and fills, `#00574B` for teal text.
 - Colours are theme attributes (`res/values/attrs.xml`: `tcBackground`, `tcAccent`, …).
   Layouts and drawables use `?attr/tc…`; code uses `FlipBaseActivity.themeColor(R.attr.tc…)`.
-  Never a raw hex or `@color/` in a layout, and never `R.color` in code.
+  Never a raw hex or `@color/` in a layout, and never `R.color` in code. Calendar colours go
+  through `FlipBaseActivity.calendarColor()` (darkened on Light so pastels stay visible).
+  The light theme keeps a **dark teal status bar**: the phone's status icons are always white.
+  Dialog themes carry the same roles and `list_row_selector`, so dialog lists get the strong
+  focus highlight too.
   `FlipBaseActivity` applies the theme before `super.onCreate` and recreates on resume after a
   change. Contrast ≥ 7:1 for body
   text, ≥ 4.5:1 for metadata (guide §4).

@@ -52,7 +52,7 @@ class DetailActivity : FlipBaseActivity() {
         }
         val zone = ZoneId.systemDefault()
         val formats = Formats(Locale.getDefault(), DateFormat.is24HourFormat(this))
-        findViewById<View>(R.id.color_bar).setBackgroundColor(e.color)
+        findViewById<View>(R.id.color_bar).setBackgroundColor(calendarColor(e.color))
         title.text = e.title.ifBlank { "(No title)" }
         title.paint.isFakeBoldText = true // stock font has no bold (guide §4)
         findViewById<TextView>(R.id.`when`).text = formats.detailWhen(e.time, zone, LocalDate.now(zone))

@@ -17,4 +17,6 @@
     <attr name="tcDivider" format="color" />
     <attr name="tcGridLine" format="color" />
     <attr name="tcOutOfMonth" format="color" />
+    <!-- True in the light theme: calendar colours are darkened so they read on white. -->
+    <attr name="tcIsLight" format="boolean" />
 </resources>

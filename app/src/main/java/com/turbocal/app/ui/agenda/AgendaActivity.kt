@@ -35,7 +35,7 @@ class AgendaActivity : CalendarActivity() {
         target = dateFrom(intent, today)
 
         list = findViewById(R.id.list)
-        adapter = RowAdapter(layoutInflater)
+        adapter = RowAdapter(layoutInflater, ::calendarColor)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, position, _ ->
             when (val row = adapter.getItem(position)) {

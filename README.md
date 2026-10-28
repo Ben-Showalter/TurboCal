@@ -34,7 +34,7 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 | Key | Does |
 |---|---|
 | **Left soft key** (or `7`) | **View**: Month → Week → Day → Agenda → Month |
-| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Today, Go to a view, Settings, show/hide disabled, updates, key help |
+| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Go to today, Settings, show/hide disabled |
 | OK | Open the selected event or day |
 | D-pad up/down | Move |
 | D-pad left/right | Month: move the selected day · Week/Day/Agenda: previous/next day |
@@ -68,10 +68,13 @@ Options → **New event** adds an event on the selected day. Every field works w
 |---|---|
 | Title, Location, Notes | type with the phone's keyboard |
 | All day | OK switches it on/off |
-| Starts / Ends (dates) | left/right: one day · `1`/`3`: one week |
-| At / Until (times) | left/right: 15 minutes · `1`/`3`: one hour |
+| Starts / Ends (dates) | OK or type a number: opens the date picker · left/right: one day |
+| At / Until (times) | OK or type a number: opens the time picker · left/right: 15 minutes |
 | Repeat | left/right: doesn't repeat, every day, week, month, year |
 
+In the pickers, type the numbers: for example `1105` then `2026` for Nov 5, 2026, or `930`
+then `7` for 9:30 PM (`2` = AM, `7` = PM, like the letters on those keys). Left/right move
+between fields, up/down change one, OK sets it, and Clear deletes a digit or closes the picker.
 Moving the start moves the end with it. Press **Save** (or the left soft key).
 
 Open a phone event to change it: the left soft key is **Edit**. Options gives **Delete this

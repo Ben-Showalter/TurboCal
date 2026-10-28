@@ -11,6 +11,7 @@ import android.view.View
 import com.turbocal.app.R
 import com.turbocal.core.display.Formats
 import com.turbocal.core.display.MonthGrid
+import com.turbocal.core.feeds.FeedColors
 import java.time.LocalDate
 
 /**
@@ -52,6 +53,13 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
     private val outOfMonth = attr(R.attr.tcOutOfMonth)
     private val focusFill = attr(R.attr.tcFocusFill)
     private val headerBg = attr(R.attr.tcSurfaceHeader)
+    private val light = context.obtainStyledAttributes(intArrayOf(R.attr.tcIsLight)).let { a ->
+        try {
+            a.getBoolean(0, false)
+        } finally {
+            a.recycle()
+        }
+    }
 
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
     private fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, resources.displayMetrics)
@@ -159,7 +167,7 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
             val shown = minOf(events.size, room)
             for (k in 0 until shown) {
                 val y = stripesTop + k * (stripeH + gap)
-                fill.color = events[k].color
+                fill.color = FeedColors.forTheme(events[k].color, light)
                 canvas.drawRect(left + pad, y, left + cellW - pad, y + stripeH, fill)
             }
             val hidden = events.size - shown

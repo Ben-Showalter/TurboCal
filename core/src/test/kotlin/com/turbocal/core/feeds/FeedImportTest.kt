@@ -40,6 +40,15 @@ class FeedImportTest {
         FeedImport.parse("""{"version":1}""")
     }
 
+    @Test fun `calendar colours darken on the light theme only`() {
+        val teal = 0xFF4DB6AC.toInt()
+        assertEquals(teal, FeedColors.forTheme(teal, light = false))
+        val dark = FeedColors.forTheme(teal, light = true)
+        assertEquals(0xFF, dark ushr 24)
+        assertEquals((0x4D * 0.65f).toInt(), dark shr 16 and 0xFF)
+        assertEquals((0xAC * 0.65f).toInt(), dark and 0xFF)
+    }
+
     @Test fun `plan merges by url`() {
         val existing = listOf(ExistingFeed(7, "webcal://example.invalid/family.ics"))
         val plan = FeedImport.plan(existing, FeedImport.parse(sample))

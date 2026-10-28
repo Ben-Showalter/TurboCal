@@ -10,7 +10,6 @@ import android.widget.EditText
 import android.widget.TextView
 import com.turbocal.app.R
 import com.turbocal.app.ui.base.FlipBaseActivity
-import com.turbocal.app.ui.base.Key
 import com.turbocal.core.display.Formats
 import com.turbocal.core.local.LocalEvent
 import com.turbocal.core.local.RepeatChoice
@@ -24,9 +23,10 @@ import java.util.UUID
 
 /**
  * Add or edit an event in the "On this phone" calendar, keypad only.
- * Stepper rows: dates move ±1 day with LEFT/RIGHT and ±1 week with 1/3;
- * times move ±15 min and ±1 hour; Repeat cycles with LEFT/RIGHT. Moving the
- * start moves the end with it. Editing a repeating event edits every repeat.
+ * Date and time rows: OK (or typing a digit) opens a keypad picker
+ * (KeypadPicker); LEFT/RIGHT also nudge them by a day or 15 minutes. Repeat
+ * cycles with LEFT/RIGHT or OK. Moving the start moves the end with it.
+ * Editing a repeating event edits every repeat.
  */
 class EventEditActivity : FlipBaseActivity() {
     private val formats by lazy { Formats(Locale.getDefault(), DateFormat.is24HourFormat(this)) }
@@ -68,11 +68,19 @@ class EventEditActivity : FlipBaseActivity() {
         error = findViewById(R.id.error)
         hint = findViewById(R.id.hint)
 
-        stepper(startDateRow, R.string.hint_date) { small, big -> moveStart(days = small, weeks = big) }
-        stepper(startTimeRow, R.string.hint_time) { small, big -> moveStart(minutes = small * 15L + big * 60L) }
-        stepper(endDateRow, R.string.hint_date) { small, big -> moveEnd(days = small, weeks = big) }
-        stepper(endTimeRow, R.string.hint_time) { small, big -> moveEnd(minutes = small * 15L + big * 60L) }
-        stepper(repeatRow, R.string.hint_repeat) { small, big -> cycleRepeat(small + big) }
+        stepper(startDateRow, R.string.hint_date, { moveStart(days = it) }) { digit ->
+            KeypadPicker.pickDate(this, getString(R.string.picker_start_date), start.toLocalDate(), digit) { setStart(it.atTime(start.toLocalTime())) }
+        }
+        stepper(startTimeRow, R.string.hint_time, { moveStart(minutes = it * 15L) }) { digit ->
+            KeypadPicker.pickTime(this, getString(R.string.picker_start_time), start.toLocalTime(), digit) { setStart(start.toLocalDate().atTime(it)) }
+        }
+        stepper(endDateRow, R.string.hint_date, { moveEnd(days = it) }) { digit ->
+            KeypadPicker.pickDate(this, getString(R.string.picker_end_date), end.toLocalDate(), digit) { setEnd(it.atTime(end.toLocalTime())) }
+        }
+        stepper(endTimeRow, R.string.hint_time, { moveEnd(minutes = it * 15L) }) { digit ->
+            KeypadPicker.pickTime(this, getString(R.string.picker_end_time), end.toLocalTime(), digit) { setEnd(end.toLocalDate().atTime(it)) }
+        }
+        stepper(repeatRow, R.string.hint_repeat, { cycleRepeat(it) })
         allDayRow.setOnClickListener { toggleAllDay() }
         allDayRow.onFocusChangeListener = View.OnFocusChangeListener { _, has -> if (has) hint.setText(R.string.hint_toggle) }
         for (f in listOf(title, location, notes)) f.onFocusChangeListener = View.OnFocusChangeListener { _, has -> if (has) hint.text = "" }
@@ -119,49 +127,61 @@ class EventEditActivity : FlipBaseActivity() {
         render()
     }
 
-    /** LEFT/RIGHT (and 1/3 via [onKey]) change a stepper row while it has focus. */
-    private fun stepper(row: TextView, hintRes: Int, change: (small: Int, big: Int) -> Unit) {
+    private val pickerRows = HashSet<View>()
+
+    /**
+     * A row changed from the keypad: LEFT/RIGHT step it; OK opens [pick] (or
+     * steps when there is no picker); a digit opens [pick] with that digit
+     * already typed.
+     */
+    private fun stepper(row: TextView, hintRes: Int, step: (Int) -> Unit, pick: ((Int?) -> Unit)? = null) {
+        if (pick != null) pickerRows += row
         row.setOnKeyListener { _, keyCode, event ->
-            val dir = when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> -1
-                KeyEvent.KEYCODE_DPAD_RIGHT -> 1
-                else -> return@setOnKeyListener false
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        step(if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) -1 else 1)
+                        render()
+                    }
+                    true
+                }
+                in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> {
+                    if (pick == null) return@setOnKeyListener false
+                    if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) pick(keyCode - KeyEvent.KEYCODE_0)
+                    true
+                }
+                else -> false
             }
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                change(dir, 0)
-                render()
-            }
-            true
         }
         row.setOnClickListener {
-            change(1, 0)
-            render()
+            if (pick != null) {
+                pick(null)
+            } else {
+                step(1)
+                render()
+            }
         }
         row.onFocusChangeListener = View.OnFocusChangeListener { _, has -> if (has) hint.setText(hintRes) }
-        row.tag = change
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun onKey(key: Key): Boolean {
-        val change = (currentFocus?.tag as? (Int, Int) -> Unit) ?: return false
-        when (key) {
-            Key.PREV -> change(0, -1)
-            Key.NEXT -> change(0, 1)
-            else -> return false
-        }
-        render()
-        return true
-    }
+    override fun wantsDigits(): Boolean = currentFocus in pickerRows
 
-    private fun moveStart(days: Int = 0, weeks: Int = 0, minutes: Long = 0) {
-        val next = start.plusDays(days.toLong()).plusWeeks(weeks.toLong()).plusMinutes(minutes)
+    private fun moveStart(days: Int = 0, minutes: Long = 0) = setStart(start.plusDays(days.toLong()).plusMinutes(minutes))
+
+    private fun moveEnd(days: Int = 0, minutes: Long = 0) = setEnd(end.plusDays(days.toLong()).plusMinutes(minutes))
+
+    /** A new start moves the end with it, keeping the event's length. */
+    private fun setStart(next: LocalDateTime) {
         val delta = ChronoUnit.MINUTES.between(start, next)
         start = next
-        end = end.plusMinutes(delta) // keep the length
+        end = end.plusMinutes(delta)
+        render()
     }
 
-    private fun moveEnd(days: Int = 0, weeks: Int = 0, minutes: Long = 0) {
-        end = end.plusDays(days.toLong()).plusWeeks(weeks.toLong()).plusMinutes(minutes)
+    private fun setEnd(next: LocalDateTime) {
+        end = next
+        error.visibility = View.GONE
+        render()
     }
 
     private fun toggleAllDay() {

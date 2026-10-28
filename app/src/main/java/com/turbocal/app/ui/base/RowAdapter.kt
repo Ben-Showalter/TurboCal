@@ -14,7 +14,11 @@ import com.turbocal.core.display.Row
  * D-pad skips them; events and "No events" rows are selectable. Stable ids
  * let [submit] keep the selection on the same row when data changes.
  */
-class RowAdapter(private val inflater: LayoutInflater) : BaseAdapter() {
+class RowAdapter(
+    private val inflater: LayoutInflater,
+    /** Maps a calendar colour to the theme's version (FlipBaseActivity.calendarColor). */
+    private val colorFor: (Int) -> Int = { it },
+) : BaseAdapter() {
     var rows: List<Row> = emptyList()
         private set
 
@@ -56,7 +60,7 @@ class RowAdapter(private val inflater: LayoutInflater) : BaseAdapter() {
             (it as TextView).text = row.label
         }
         is Row.Event -> (convertView ?: inflater.inflate(R.layout.row_event, parent, false)).also {
-            it.findViewById<View>(R.id.color_bar).setBackgroundColor(row.color)
+            it.findViewById<View>(R.id.color_bar).setBackgroundColor(colorFor(row.color))
             it.findViewById<TextView>(R.id.time).text = row.timeLabel
             it.findViewById<TextView>(R.id.title).text = row.title
             it.findViewById<TextView>(R.id.subtitle).apply {

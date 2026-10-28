@@ -96,7 +96,7 @@ class FeedEditActivity : FlipBaseActivity() {
     }
 
     private fun renderToggles() {
-        colorSwatch.setBackgroundColor(color)
+        colorSwatch.setBackgroundColor(calendarColor(color))
         colorLabel.text = getString(R.string.feed_color, FeedColors.nameOf(color))
         enabledRow.setText(if (enabled) R.string.feed_enabled_on else R.string.feed_enabled_off)
     }

@@ -11,6 +11,6 @@
     <dimen name="focus_bar">6dp</dimen>
     <dimen name="gutter">6dp</dimen>
     <dimen name="day_info_line">18dp</dimen>
-    <!-- 16dp weekday band + 6 weeks of 25dp; the day info takes the rest. -->
-    <dimen name="month_grid_height">166dp</dimen>
+    <!-- Month view: header line + 3 event lines (4 × day_info_line); the grid fills the rest. -->
+    <dimen name="day_info_height">72dp</dimen>
 </resources>

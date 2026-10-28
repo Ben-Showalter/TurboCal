@@ -14,7 +14,6 @@ import com.turbocal.app.ui.day.DayActivity
 import com.turbocal.app.ui.eventedit.EventEditActivity
 import com.turbocal.app.ui.month.MonthActivity
 import com.turbocal.app.ui.settings.SettingsActivity
-import com.turbocal.app.ui.update.UpdateActivity
 import com.turbocal.app.ui.week.WeekActivity
 import com.turbocal.core.display.Formats
 import kotlinx.coroutines.flow.combine
@@ -91,20 +90,15 @@ abstract class CalendarActivity : FlipBaseActivity() {
     }
 
     override fun onOptionsKey() {
+        // Kept short (owner): views switch with the View key; updates and key help live in Settings > App.
         val showing = graph.prefs.showDisabled.value
-        val others = CalendarView.values().filter { it != view }
-        val actions = ArrayList<Pair<String, () -> Unit>>()
-        actions += getString(R.string.menu_new_event) to { newEvent() }
-        actions += getString(R.string.menu_sync) to { syncNow() }
-        actions += getString(R.string.menu_today) to { goToday() }
-        for (v in others) actions += getString(R.string.menu_go_to, v.label) to { switchTo(v) }
-        actions += getString(R.string.menu_settings) to { openSettings() }
-        actions += getString(if (showing) R.string.menu_hide_disabled else R.string.menu_show_disabled) to { toggleDisabled() }
-        actions += getString(R.string.menu_update) to { startActivity(Intent(this, UpdateActivity::class.java)) }
-        actions += getString(R.string.menu_keys) to {
-            AlertDialog.Builder(this).setMessage(R.string.keys_help).setPositiveButton(android.R.string.ok, null).show()
-            Unit
-        }
+        val actions = listOf<Pair<String, () -> Unit>>(
+            getString(R.string.menu_new_event) to { newEvent() },
+            getString(R.string.menu_sync) to { syncNow() },
+            getString(R.string.menu_today) to { goToday() },
+            getString(R.string.menu_settings) to { openSettings() },
+            getString(if (showing) R.string.menu_hide_disabled else R.string.menu_show_disabled) to { toggleDisabled() },
+        )
         AlertDialog.Builder(this).setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }.show()
     }
 

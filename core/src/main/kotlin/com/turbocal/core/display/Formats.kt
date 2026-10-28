@@ -36,6 +36,9 @@ class Formats(locale: Locale = Locale.getDefault(), use24h: Boolean = false) {
         }
     }
 
+    /** "Thu, Nov 5, 2026" — the picker preview always shows the year. */
+    fun fullDate(day: LocalDate): String = dayYear.format(day)
+
     fun dayTitle(day: LocalDate, today: LocalDate): String =
         if (day.year == today.year) dayShort.format(day) else dayYear.format(day)
 

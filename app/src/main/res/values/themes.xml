@@ -18,6 +18,8 @@
         <item name="tcDivider">@color/dark_divider</item>
         <item name="tcGridLine">@color/dark_grid_line</item>
         <item name="tcOutOfMonth">@color/dark_out_of_month</item>
+        <item name="tcIsLight">false</item>
+        <item name="android:statusBarColor">@color/dark_background</item>
         <item name="android:windowBackground">@color/dark_background</item>
         <item name="android:colorBackground">@color/dark_background</item>
         <item name="android:colorPrimary">@color/dark_surface_header</item>
@@ -44,10 +46,13 @@
         <item name="tcDivider">@color/light_divider</item>
         <item name="tcGridLine">@color/light_grid_line</item>
         <item name="tcOutOfMonth">@color/light_out_of_month</item>
+        <item name="tcIsLight">true</item>
+        <!-- A dark bar: the phone's white status icons wash out on a light one. -->
+        <item name="android:statusBarColor">@color/light_accent_text</item>
         <item name="android:windowBackground">@color/light_background</item>
         <item name="android:colorBackground">@color/light_background</item>
         <item name="android:colorPrimary">@color/light_surface_header</item>
-        <item name="android:colorPrimaryDark">@color/light_surface_header</item>
+        <item name="android:colorPrimaryDark">@color/light_accent_text</item>
         <item name="android:colorAccent">@color/light_accent</item>
         <item name="android:textColorPrimary">@color/light_text_primary</item>
         <item name="android:textColorSecondary">@color/light_text_secondary</item>
@@ -58,14 +63,37 @@
 
     <style name="AppDialog.Dark" parent="@android:style/Theme.Material.Dialog.Alert">
         <item name="android:colorAccent">@color/dark_accent</item>
+        <!-- Dialog lists (Options, Settings menus) get the app's strong focus highlight too. -->
+        <item name="tcAccent">@color/dark_accent</item>
+        <item name="tcAccentText">@color/dark_accent</item>
+        <item name="tcFocusFill">@color/dark_focus_fill</item>
+        <item name="tcTextPrimary">@color/dark_text_primary</item>
+        <item name="tcTextSecondary">@color/dark_text_secondary</item>
+        <item name="tcOnAccent">@color/dark_on_accent</item>
+        <item name="tcIsLight">false</item>
+        <item name="android:listViewStyle">@style/DialogList</item>
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:textSize">@dimen/text_body</item>
     </style>
 
     <style name="AppDialog.Light" parent="@android:style/Theme.Material.Light.Dialog.Alert">
         <item name="android:colorAccent">@color/light_accent</item>
+        <!-- Dialog lists (Options, Settings menus) get the app's strong focus highlight too. -->
+        <item name="tcAccent">@color/light_accent</item>
+        <item name="tcAccentText">@color/light_accent_text</item>
+        <item name="tcFocusFill">@color/light_focus_fill</item>
+        <item name="tcTextPrimary">@color/light_text_primary</item>
+        <item name="tcTextSecondary">@color/light_text_secondary</item>
+        <item name="tcOnAccent">@color/light_on_accent</item>
+        <item name="tcIsLight">true</item>
+        <item name="android:listViewStyle">@style/DialogList</item>
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="DialogList" parent="@android:style/Widget.Material.ListView">
+        <item name="android:listSelector">@drawable/list_row_selector</item>
+        <item name="android:drawSelectorOnTop">true</item>
     </style>
 
     <!-- The launcher trampoline shows nothing. -->

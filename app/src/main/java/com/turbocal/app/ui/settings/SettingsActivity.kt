@@ -408,7 +408,7 @@ class SettingsActivity : FlipBaseActivity() {
                 }
                 is Item.Feed -> {
                     bar.visibility = View.VISIBLE
-                    bar.setBackgroundColor(item.feed.color)
+                    bar.setBackgroundColor(calendarColor(item.feed.color))
                     title.text = item.feed.name
                     title.setTextColor(themeColor(if (item.feed.enabled) R.attr.tcTextPrimary else R.attr.tcTextSecondary))
                     sub.text = item.subtitle
