@@ -48,7 +48,7 @@ class WeekActivity : CalendarActivity() {
         list.setOnItemClickListener { _, _, position, _ ->
             when (val row = adapter.getItem(position)) {
                 is Row.Event -> startActivity(Intent(this, DetailActivity::class.java).putExtra(DetailActivity.EXTRA_ID, row.eventId))
-                is Row.Empty -> jump(intentFor(this, DayActivity::class.java, row.date))
+                is Row.Empty -> openView(DayActivity::class.java, row.date)
                 is Row.DayHeader -> Unit
             }
         }
@@ -66,7 +66,7 @@ class WeekActivity : CalendarActivity() {
             return
         }
         weekStart = start
-        setTitleText(formats.weekTitle(start, today))
+        setTitleText(formats.weekTitle(start, today, WeekBuilder.weekStart(today, firstDayOfWeek)))
         job?.cancel()
         var first = true
         job = scope.launch {
@@ -81,6 +81,12 @@ class WeekActivity : CalendarActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        show(dateFrom(intent, today))
     }
 
     /** 1 / 3: previous / next week, same weekday. */

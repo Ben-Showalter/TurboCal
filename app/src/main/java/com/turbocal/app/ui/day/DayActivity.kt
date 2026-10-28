@@ -61,6 +61,12 @@ class DayActivity : CalendarActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        show(dateFrom(intent, today))
+    }
+
     override fun step(direction: Int) = show(day.plusDays(direction.toLong()))
 
     override fun goToday() = show(today)

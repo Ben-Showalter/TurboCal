@@ -41,7 +41,7 @@ class AgendaActivity : CalendarActivity() {
         list.setOnItemClickListener { _, _, position, _ ->
             when (val row = adapter.getItem(position)) {
                 is Row.Event -> startActivity(Intent(this, DetailActivity::class.java).putExtra(DetailActivity.EXTRA_ID, row.eventId))
-                is Row.Empty -> jump(intentFor(this, DayActivity::class.java, row.date))
+                is Row.Empty -> openView(DayActivity::class.java, row.date)
                 is Row.DayHeader -> Unit
             }
         }

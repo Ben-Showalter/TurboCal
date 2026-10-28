@@ -15,8 +15,8 @@ import com.turbocal.core.feeds.FeedColors
 import java.time.LocalDate
 
 /**
- * The six-week grid. Every cell is a bordered block: the day number at the
- * top-left, then one full-width stripe per event in its calendar's colour,
+ * The six-week grid. Every cell is a bordered block: the day number (16sp) at
+ * the top-left, then one thin full-width line per event in its calendar's colour,
  * stacked in Day-view order, with "+N" in the top corner for the rest. The selected
  * cell gets a thick accent border over the focus fill; today's number sits
  * on an accent circle. It owns the D-pad while focused. Colours come from
@@ -64,11 +64,11 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
     private fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, resources.displayMetrics)
 
-    private val number = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.LEFT; textSize = sp(12f) }
-    private val more = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.RIGHT; textSize = sp(10f) }
+    private val number = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.LEFT; textSize = sp(16f) }
+    private val more = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.RIGHT; textSize = sp(11f) }
     private val header = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER; textSize = sp(11f); color = secondary }
     private val fill = Paint()
-    private val line = Paint().apply { color = gridLine; strokeWidth = dp(1f) }
+    private val line = Paint().apply { color = gridLine }
     private val border = Paint().apply { style = Paint.Style.STROKE; strokeWidth = dp(3f); color = accent }
     private val rect = RectF()
     private val corner = dp(5f)
@@ -115,26 +115,33 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onDraw(canvas: Canvas) {
         val g = grid ?: return
-        val headerH = dp(16f)
-        val cellW = width / 7f
-        val cellH = (height - headerH) / MonthGrid.WEEKS
+        // Every edge is snapped to a whole pixel: at the E4810's ~0.75 density a
+        // 1dp line on a fractional position can vanish (owner, round 6).
+        val headerH = Math.round(dp(16f))
+        val colX = IntArray(8) { Math.round(width * it / 7f) }
+        val rowY = IntArray(MonthGrid.WEEKS + 1) { headerH + Math.round((height - headerH) * it / MonthGrid.WEEKS.toFloat()) }
+        val lineW = maxOf(1, Math.round(dp(1f)))
 
         // Weekday letters on a header band.
         fill.color = headerBg
-        canvas.drawRect(0f, 0f, width.toFloat(), headerH, fill)
-        for (c in 0 until 7) canvas.drawText(letters.getOrElse(c) { "" }, cellW * c + cellW / 2, headerH - dp(4f), header)
+        canvas.drawRect(0f, 0f, width.toFloat(), headerH.toFloat(), fill)
+        for (c in 0 until 7) {
+            canvas.drawText(letters.getOrElse(c) { "" }, (colX[c] + colX[c + 1]) / 2f, headerH - dp(4f), header)
+        }
 
-        val pad = dp(2f)
-        val stripeH = dp(3f)
-        val gap = dp(1f)
-        val numberH = number.textSize + dp(2f)
+        val pad = maxOf(2f, Math.round(dp(2f)).toFloat())
+        // Thin event lines with a little space between them (owner, round 6).
+        val lineH = maxOf(2f, Math.round(dp(2f)).toFloat())
+        val gap = maxOf(2f, Math.round(dp(2f)).toFloat())
 
         g.cells.forEachIndexed { i, cell ->
             val col = i % 7
             val row = i / 7
-            val left = cellW * col
-            val top = headerH + cellH * row
-            rect.set(left, top, left + cellW, top + cellH)
+            val left = colX[col].toFloat()
+            val right = colX[col + 1].toFloat()
+            val top = rowY[row].toFloat()
+            val bottom = rowY[row + 1].toFloat()
+            rect.set(left, top, right, bottom)
             val isSelected = cell.date == selected
 
             if (!cell.inMonth) {
@@ -144,7 +151,7 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
             if (isSelected) {
                 fill.color = focusFill
                 val inset = dp(1.5f)
-                canvas.drawRoundRect(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset, corner, corner, fill)
+                canvas.drawRoundRect(left + inset, top + inset, right - inset, bottom - inset, corner, corner, fill)
             }
 
             // Day number, on an accent circle for today.
@@ -156,45 +163,47 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
                 fill.color = accent
                 val label = cell.date.dayOfMonth.toString()
                 val w = number.measureText(label)
-                canvas.drawCircle(nx + w / 2, ny - number.textSize / 3, number.textSize * 0.75f, fill)
+                canvas.drawCircle(nx + w / 2, ny - number.textSize / 3, number.textSize * 0.72f, fill)
                 number.color = onAccent
             } else {
                 number.color = if (cell.inMonth) primary else secondary
             }
             canvas.drawText(cell.date.dayOfMonth.toString(), nx, ny, number)
 
-            // One full-width stripe per event, stacked; "+N" when they don't fit.
-            val stripesTop = top + pad + numberH
-            val room = ((rect.bottom - pad - stripesTop + gap) / (stripeH + gap)).toInt().coerceAtLeast(0)
+            // One full-width line per event, stacked; "+N" in the corner for the rest.
+            val linesTop = ny + dp(4f)
+            val room = ((bottom - pad - linesTop + gap) / (lineH + gap)).toInt().coerceAtLeast(0)
             val events = cell.events
             val shown = minOf(events.size, room)
             for (k in 0 until shown) {
-                val y = stripesTop + k * (stripeH + gap)
+                val y = Math.round(linesTop + k * (lineH + gap)).toFloat()
                 fill.color = FeedColors.forTheme(events[k].color, light)
-                canvas.drawRect(left + pad, y, left + cellW - pad, y + stripeH, fill)
+                canvas.drawRect(left + pad + lineW, y, right - pad, y + lineH, fill)
             }
             val hidden = events.size - shown
             if (hidden > 0) {
                 more.color = if (cell.inMonth) primary else secondary
                 more.isFakeBoldText = true
-                canvas.drawText("+$hidden", left + cellW - pad, top + pad + more.textSize, more)
+                canvas.drawText("+$hidden", right - pad, top + pad + more.textSize, more)
             }
         }
 
-        // Grid lines between all blocks.
-        for (c in 1 until 7) canvas.drawLine(cellW * c, headerH, cellW * c, height.toFloat(), line)
+        // Grid lines between all blocks, as whole-pixel rects.
+        for (c in 1 until 7) canvas.drawRect(colX[c].toFloat(), headerH.toFloat(), (colX[c] + lineW).toFloat(), height.toFloat(), line)
         for (r in 0..MonthGrid.WEEKS) {
-            val y = headerH + cellH * r
-            canvas.drawLine(0f, y, width.toFloat(), y, line)
+            val y = minOf(rowY[r], height - lineW).toFloat()
+            canvas.drawRect(0f, y, width.toFloat(), y + lineW, line)
         }
 
-        // Selection border last, over the lines, with rounded corners (owner, round 4).
+        // Selection border last, over the lines, with rounded corners.
         val si = g.cells.indexOfFirst { it.date == selected }
         if (si >= 0) {
             val inset = border.strokeWidth / 2 + dp(1.5f)
-            val left = cellW * (si % 7)
-            val top = headerH + cellH * (si / 7)
-            canvas.drawRoundRect(left + inset, top + inset, left + cellW - inset, top + cellH - inset, corner, corner, border)
+            val left = colX[si % 7].toFloat()
+            val right = colX[si % 7 + 1].toFloat()
+            val top = rowY[si / 7].toFloat()
+            val bottom = rowY[si / 7 + 1].toFloat()
+            canvas.drawRoundRect(left + inset, top + inset, right - inset, bottom - inset, corner, corner, border)
         }
     }
 }

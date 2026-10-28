@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.EditText
 import android.widget.TextView
@@ -198,10 +199,27 @@ abstract class FlipBaseActivity : Activity() {
         return true
     }
 
-    /** Clear-as-backspace; everything else belongs to the field and the system T9 (guide §3). */
+    /**
+     * Clear-as-backspace, and D-pad up/down out of the field; everything else
+     * belongs to the field and the system T9 (guide §3). On the Kyocera the T9
+     * keeps the D-pad and soft keys while a field has focus, so without the
+     * escape a form's Save row can't be reached (owner, round 6).
+     */
     private fun dispatchWhileTyping(event: KeyEvent, field: EditText): Boolean {
         val code = event.keyCode
         if (code == KeyEvent.KEYCODE_MENU) return true // never let MENU open anything over the T9
+        if (code == KeyEvent.KEYCODE_DPAD_DOWN || code == KeyEvent.KEYCODE_DPAD_UP) {
+            val down = code == KeyEvent.KEYCODE_DPAD_DOWN
+            if (event.action == KeyEvent.ACTION_DOWN && atEdge(field, down)) {
+                val next = field.focusSearch(if (down) View.FOCUS_DOWN else View.FOCUS_UP)
+                if (next != null && next.requestFocus(if (down) View.FOCUS_DOWN else View.FOCUS_UP)) {
+                    pendingDowns += code
+                    return true
+                }
+            } else if (event.action == KeyEvent.ACTION_UP && pendingDowns.remove(code)) {
+                return true
+            }
+        }
         if (code == KeyEvent.KEYCODE_BACK) {
             if (event.action == KeyEvent.ACTION_DOWN) {
                 val start = field.selectionStart
@@ -216,6 +234,13 @@ abstract class FlipBaseActivity : Activity() {
             }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    /** True when the cursor is on the field's last line (down) or first line (up). */
+    private fun atEdge(field: EditText, down: Boolean): Boolean {
+        val layout = field.layout ?: return true
+        val line = layout.getLineForOffset(field.selectionStart.coerceAtLeast(0))
+        return if (down) line >= layout.lineCount - 1 else line <= 0
     }
 
     companion object {

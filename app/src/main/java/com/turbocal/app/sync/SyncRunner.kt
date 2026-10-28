@@ -31,7 +31,8 @@ class SyncRunner(
 
     /** Syncs [onlyFeedId], or every enabled feed when null. */
     suspend fun run(onlyFeedId: Long? = null) = withContext(Dispatchers.IO) {
-        val feeds = dao.allFeeds().filter { it.enabled && (onlyFeedId == null || it.id == onlyFeedId) }
+        // Hidden calendars (enabled = false) still sync, so showing one again is instant (owner, round 6).
+        val feeds = dao.allFeeds().filter { onlyFeedId == null || it.id == onlyFeedId }
         val zone = ZoneId.systemDefault()
         val window = ExpansionWindow.around(LocalDate.now(zone), zone)
         var allOk = true

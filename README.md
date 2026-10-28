@@ -25,7 +25,8 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
   every event of the selected day, one per line. On a busy day the grid gets shorter to
   make room, and grows back on a quiet day. Only on a very busy day (about 12 or more
   events) does the last line say "+N more – OK opens the day".
-- **Week:** the seven days of the week (starting on your locale's first weekday), each with a
+- **Week:** titled "This week", "Next week" or "Last week" (otherwise the dates); the seven
+  days of the week (starting on your locale's first weekday), each with a
   header, including empty days.
 - **Day:** one day, all-day events first.
 - **Agenda:** every day that has events, opening on today.
@@ -35,31 +36,40 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 | Key | Does |
 |---|---|
 | **Left soft key** (or `7`) | **View**: Month → Week → Day → Agenda → Month |
-| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Go to today, Settings, show/hide disabled |
+| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Go to today, Settings, Calendars, show/hide hidden calendars |
 | OK | Open the selected event or day |
 | D-pad up/down | Move |
-| D-pad left/right | Month: move along the week; past Saturday it pages to next month (past Sunday, the previous month), same weekday and row · Week/Day/Agenda: previous/next day |
+| D-pad left/right | Previous/next day (in Month it wraps to the next or previous week) |
 | `1` / `3` | Previous / next month (Month), week (Week) or day (Day, Agenda) |
 | `5` | Jump to today |
 | `0` | Sync now |
 | `*` | Settings |
 | `#` | Show / hide disabled calendars |
-| Back / Clear | On a calendar view: **exit** (it reopens there next time) · elsewhere: back |
+| Back / Clear | Back to the previous screen, including the previous view |
+| End | Go to the phone's home screen (TurboCal reopens on the view you left) |
 
 In Settings the left soft key is **Sync** and the right one shows this key list. In a text
 field the keys type, and Clear deletes a character.
 
+## Calendars
+
+Options → **Calendars** (or Settings → Calendars) lists every calendar with its status:
+
+- **OK** shows or hides the selected calendar. Hidden calendars keep syncing, so showing one
+  again is instant. `#` temporarily shows hidden ones in the views.
+- **Left soft key – Edit:** rename or recolour, sync now (or export, for the phone calendar),
+  delete.
+- **Right soft key – Add:** import feeds from a file, type a calendar link, or import an .ics
+  file into the phone calendar.
+
 ## Settings
 
-`*` opens a menu of three pages, each its own screen:
+`*` opens a menu:
 
 - **Sync:** Sync now, and how often to sync in the background.
-- **Calendars:**
-  - import feeds from a file, or add a calendar by typing a link;
-  - import/export the phone calendar;
-  - every calendar with its status. OK on one gives Edit, Turn on/off, Sync, Delete.
-- **App:** Theme (Dark or Light, OK to switch), Show disabled calendars, Software update,
-  Key help.
+- **Calendars:** opens the Calendars screen above.
+- **App:** Theme (Light or Dark, OK to switch; Light is the default), Show hidden calendars,
+  Software update, Key help.
 
 ## The "On this phone" calendar
 
@@ -76,14 +86,15 @@ Options → **New event** adds an event on the selected day. Every field works w
 In the pickers, type the numbers: for example `1105` then `2026` for Nov 5, 2026, or `930`
 then `7` for 9:30 PM (`2` = AM, `7` = PM, like the letters on those keys). Left/right move
 between fields, up/down change one, OK sets it, and Clear deletes a digit or closes the picker.
-Moving the start moves the end with it. Press **Save** (or the left soft key).
+Moving the start moves the end with it. Press **Save**: there's one right under the title and
+one at the bottom. D-pad down always moves out of a text field, so both are reachable.
 
 Open a phone event to change it: the left soft key is **Edit**. Options gives **Delete this
 one** (for repeating events) or **Delete**. Editing a repeating event changes every repeat.
 Times follow the phone's clock, so 9:00 stays 9:00 if you change time zone.
 
 **Back it up:** phone events live only in TurboCal. Uninstalling it (for example, to switch
-from a debug build to a release build) deletes them. Before that, use Settings → Calendars →
+from a debug build to a release build) deletes them. Before that, use Calendars → select "On this phone" → **Edit** →
 **Export phone calendar**, then:
 
 ```bash
@@ -92,7 +103,7 @@ adb pull /sdcard/Android/data/com.turbocal.app/files/turbocal_local.ics
 adb push turbocal_local.ics /sdcard/Android/data/com.turbocal.app/files/turbocal_local.ics
 ```
 
-Then Settings → Calendars → **Import .ics into phone calendar**. This works with any `.ics`
+Then Calendars → **Add** → **Import .ics into phone calendar**. This works with any `.ics`
 file named `turbocal_local.ics` (also from `Download/`). Changed single occurrences in an
 imported file are skipped and counted.
 
@@ -150,14 +161,14 @@ adb push turbocal_feeds.json /sdcard/Android/data/com.turbocal.app/files/turboca
 adb push turbocal_feeds.json /sdcard/Download/turbocal_feeds.json
 ```
 
-On the phone: `*` (Settings) → **Calendars** → **Import feeds from file** → OK. If it asks for storage access,
+On the phone: Options → **Calendars** → **Add** → **Import feeds from file**. If it asks for storage access,
 move to **Allow** and press OK. When it says "Imported N…", leave the focus on **Delete** and
 press OK to remove the file: it contains your private links. `turbocal_feeds*.json` is in
 `.gitignore`; never commit it.
 
 ### Type a link
 
-Settings → Calendars → **Add calendar by typing a link**. Type the name and link with the phone's keyboard.
+Calendars → **Add** → **Type a calendar link**. Type the name and link with the phone's keyboard.
 Move down to the **Color** row and use left/right to change it. **Enabled** toggles with OK.
 Then move to **Save** and press OK.
 

@@ -27,9 +27,9 @@ class Prefs(context: Context) {
         get() = sp.getLong(KEY_CLEAN_SYNC, -1).takeIf { it >= 0 }
         set(v) = sp.edit().putLong(KEY_CLEAN_SYNC, v ?: -1).apply()
 
-    /** Dark (default) or light; every screen applies it in onCreate. */
+    /** Light (default, owner round 6) or dark; every screen applies it in onCreate. */
     var theme: AppTheme
-        get() = AppTheme.values().firstOrNull { it.name == sp.getString(KEY_THEME, null) } ?: AppTheme.DARK
+        get() = AppTheme.values().firstOrNull { it.name == sp.getString(KEY_THEME, null) } ?: AppTheme.LIGHT
         set(v) = sp.edit().putString(KEY_THEME, v.name).apply()
 
     /** The calendar view the app was last on; the launcher reopens it. */

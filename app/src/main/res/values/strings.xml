@@ -12,9 +12,19 @@
     <string name="key_save">Save</string>
     <string name="key_keys">Keys</string>
     <string name="key_edit">Edit</string>
+    <string name="key_add">Add</string>
+    <string name="key_show_hide">Show/Hide</string>
 
     <string name="title_agenda">Agenda</string>
     <string name="title_settings">Settings</string>
+    <string name="title_calendars">Calendars</string>
+    <string name="calendars_hint">OK shows or hides a calendar</string>
+    <string name="calendars_empty">No calendars yet - press Add</string>
+    <string name="calendars_add_link">Type a calendar link</string>
+    <string name="calendar_hidden">Hidden</string>
+    <string name="calendar_shown">Shown · %1$s</string>
+    <string name="toast_hidden">Hidden</string>
+    <string name="toast_shown">Shown</string>
     <string name="title_update">Software update</string>
     <string name="title_add_feed">Add calendar</string>
     <string name="title_edit_feed">Edit calendar</string>
@@ -24,16 +34,17 @@
     <string name="menu_sync">Sync now (0)</string>
     <string name="menu_today">Go to today (5)</string>
     <string name="menu_settings">Settings (*)</string>
-    <string name="menu_show_disabled">Show disabled calendars (#)</string>
-    <string name="menu_hide_disabled">Hide disabled calendars (#)</string>
+    <string name="menu_calendars">Calendars</string>
+    <string name="menu_show_disabled">Show hidden calendars (#)</string>
+    <string name="menu_hide_disabled">Stop showing hidden calendars (#)</string>
     <string name="menu_keys">Key help</string>
 
     <string name="status_syncing">Syncing…</string>
     <string name="status_no_feeds">No calendars - press * to add one</string>
     <string name="status_phone_only">Phone calendar only</string>
     <string name="status_error">Sync problem - see Settings</string>
-    <string name="toast_showing_disabled">Showing disabled calendars</string>
-    <string name="toast_hiding_disabled">Hiding disabled calendars</string>
+    <string name="toast_showing_disabled">Showing hidden calendars</string>
+    <string name="toast_hiding_disabled">Hidden calendars hidden again</string>
     <string name="toast_sync_started">Syncing…</string>
     <string name="toast_offline">No connection - will sync when online</string>
     <string name="toast_no_links">No calendar links to sync - add one in Settings (*)</string>
@@ -54,7 +65,7 @@
     <string name="settings_import">Import feeds from file</string>
     <string name="settings_import_sub">Download/turbocal_feeds.json</string>
     <string name="settings_add">Add calendar by typing a link</string>
-    <string name="settings_show_disabled">Show disabled calendars</string>
+    <string name="settings_show_disabled">Show hidden calendars</string>
     <string name="settings_update">Software update</string>
     <string name="settings_header_sync">Sync</string>
     <string name="settings_header_calendars">Calendars</string>
@@ -163,6 +174,6 @@
     <string name="update_badge">Update available: %1$s</string>
     <string name="update_allow_sources">Allow installs: select TurboCal, press OK to turn on, then press Back.</string>
 
-    <string name="keys_help">View (left key or 7): Month, Week, Day, Agenda\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day, week or month\n5: today\n0: sync now\n*: Settings\n#: show/hide disabled calendars\nBack: exit (the app reopens this view)</string>
+    <string name="keys_help">View (left key or 7): Month, Week, Day, Agenda\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day, week or month\n5: today\n0: sync now\n*: Settings\n#: show/hide hidden calendars\nBack: exit (the app reopens this view)</string>
     <string name="unhandled_key">KEY %1$d</string>
 </resources>

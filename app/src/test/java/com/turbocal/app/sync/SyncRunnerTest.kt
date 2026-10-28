@@ -75,6 +75,17 @@ class SyncRunnerTest {
         assertEquals(now, feed.lastSuccessAt)
     }
 
+    @Test fun `hidden calendars still sync`() = runTest {
+        val dao = db.dao()
+        val runner = SyncRunner(dao, FeedFetcher(transport), Prefs(ApplicationProvider.getApplicationContext()))
+        val id = dao.insertFeed(FeedEntity(name = "H", url = "https://example.invalid/h.ics", color = 1, enabled = false))
+        respond = { HttpResponse(200, emptyMap(), ics.byteInputStream()) }
+        runner.run()
+        assertEquals(3, dao.eventsBetween(Long.MIN_VALUE / 2, Long.MAX_VALUE / 2, true).first().size)
+        assertEquals(0, dao.eventsBetween(Long.MIN_VALUE / 2, Long.MAX_VALUE / 2, false).first().size) // hidden from views
+        assertNull(dao.feed(id)!!.lastError)
+    }
+
     @Test fun `stored instances survive a garbage body`() = runTest {
         val dao = db.dao()
         val runner = SyncRunner(dao, FeedFetcher(transport), Prefs(ApplicationProvider.getApplicationContext()))

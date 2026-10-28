@@ -1,5 +1,6 @@
 package com.turbocal.app.ui.month
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.TypedValue
@@ -51,10 +52,9 @@ class MonthActivity : CalendarActivity() {
         grid = findViewById(R.id.grid)
         dayInfo = findViewById(R.id.day_info)
         grid.listener = object : MonthGridView.Listener {
-            // LEFT/RIGHT page months at the row ends; UP/DOWN move a week.
-            override fun onMove(dx: Int, dy: Int) =
-                select(if (dy == 0) MonthNav.moveHorizontal(selected, dx, firstDayOfWeek) else MonthNav.move(selected, dx, dy))
-            override fun onOpen() = jump(intentFor(this@MonthActivity, DayActivity::class.java, selected))
+            // LEFT/RIGHT move a day (wrapping into the next/previous week), UP/DOWN a week.
+            override fun onMove(dx: Int, dy: Int) = select(MonthNav.move(selected, dx, dy))
+            override fun onOpen() = openView(DayActivity::class.java, selected)
         }
         observeStatus()
         select(dateFrom(intent, today))
@@ -130,6 +130,12 @@ class MonthActivity : CalendarActivity() {
         gravity = Gravity.CENTER_VERTICAL
         setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(if (header) R.dimen.text_label else R.dimen.text_meta))
         setTextColor(themeColor(if (header) R.attr.tcAccentText else R.attr.tcTextSecondary))
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        select(dateFrom(intent, today))
     }
 
     override fun step(direction: Int) = select(MonthNav.shiftMonth(selected, direction))

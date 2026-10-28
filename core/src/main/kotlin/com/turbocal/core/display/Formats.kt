@@ -51,8 +51,18 @@ class Formats(locale: Locale = Locale.getDefault(), use24h: Boolean = false) {
 
     fun monthTitle(day: LocalDate): String = monthYear.format(day)
 
-    /** "Oct 25 – 31", "Oct 29 – Nov 4", or with years when the week isn't in this year. */
-    fun weekTitle(start: LocalDate, today: LocalDate): String {
+    /**
+     * "This week" / "Next week" / "Last week" relative to [thisWeekStart] (the
+     * start of the week containing today); otherwise "Oct 25 – 31",
+     * "Oct 29 – Nov 4", or with the year when the week isn't in this year.
+     */
+    fun weekTitle(start: LocalDate, today: LocalDate, thisWeekStart: LocalDate): String {
+        when (start) {
+            thisWeekStart -> return "This week"
+            thisWeekStart.plusWeeks(1) -> return "Next week"
+            thisWeekStart.minusWeeks(1) -> return "Last week"
+            else -> Unit
+        }
         val end = start.plusDays(6)
         val left = dateShort.format(start)
         val right = if (end.month == start.month) end.dayOfMonth.toString() else dateShort.format(end)

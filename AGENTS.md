@@ -209,7 +209,8 @@ named compatibility quirks below.
 - Each feed fails independently. Map errors to short plain text for the status line:
   "No connection", "Feed not found (404) - check the link", "Not an iCalendar feed",
   "Server error (503)". Never put the URL in the error.
-- Disabled feeds are not fetched. Their stored events stay; `#` decides whether to show them.
+- **Hidden calendars still sync** (owner, round 6): `enabled` only means "shown". Hidden
+  calendars' events are fetched and stored but left out of the views; `#` shows them for a while.
 
 ## 6. Tests — what your change must include
 
@@ -285,13 +286,14 @@ Screens:
 - Four interchangeable calendar views, cycled with the View key: **Month** (default on first
   launch) → **Week** → **Day** → **Agenda**.
   - Month: the grid fills all the height the screen has (the E4810 runs at ~0.75 density, so
-    never size it in fixed dp); a grid of bordered blocks, one full-width colour stripe per event stacked in each
-    block, "+N" when they don't fit. Under it, **every** event of the focused day, one line each:
+    never size it in fixed dp); a grid of bordered blocks (every edge snapped to whole pixels so
+    no line vanishes at 0.75 density), 16sp day numbers, and one thin full-width line per event
+    (2 dp, 2 dp apart) stacked in each block, "+N" when they don't fit. Under it, **every** event of the focused day, one line each:
     the list is as tall as that day needs and the grid shrinks only by that much, down to
     `month_grid_min_height`; "+N more – OK opens the day" appears only past that (owner,
     round 5: no fixed-size band).
   - Week: 7 days, every day with a header, empty days included; the week starts on the
-    locale's first day.
+    locale's first day. Title "This week" / "Next week" / "Last week", otherwise the dates.
   - Day: all-day events at the top.
   - Agenda: days with events, opening on today.
 - **Event detail**: read-only for feeds. For phone events: Edit / Delete this one / Delete.
@@ -299,16 +301,23 @@ Screens:
   (`KeypadPicker`, logic in core `input/KeypadEntry`, unit-tested): type the numbers (fields
   advance by themselves; on AM/PM, 2 = AM and 7 = PM), ‹ › move between fields, ˄˅ change one,
   OK sets, Clear deletes a digit or cancels. Left/right on the row still nudge it.
-- **Settings** is a menu of three pages, each its own screen:
-  - **Sync**: Sync now, interval.
-  - **Calendars**: import feeds, add a link, phone calendar import/export, every calendar with
-    its status.
-  - **App**: theme, show disabled calendars, software update, key help.
+- **Calendars** (Options > Calendars, also Settings > Calendars): every calendar with its
+  status. OK shows/hides it; left soft key **Edit** (edit, sync or export, delete); right soft
+  key **Add** (import feeds file, type a link, import .ics into the phone calendar).
+- **Settings** is a menu: **Sync** (Sync now, interval), **Calendars** (opens the screen
+  above), **App** (theme, show hidden calendars, software update, key help).
+- **Text fields never trap focus:** `FlipBaseActivity` moves focus out of an `EditText` on D-pad
+  down at its last line / up at its first line, before the system T9 sees the key (the T9
+  otherwise keeps the D-pad and soft keys, which made Save unreachable). The event editor also
+  has a Save row right under Title.
 - **Feed edit**, **Software update**.
 
 Navigation rules (owner decisions, §11):
-- **Back/Clear on any of the four calendar views exits the app.** Views switch with `jump()`,
-  and the launcher and Detail→Day clear the task, so a view is always alone on the back stack.
+- **Back/Clear returns to the previous screen**, including the previous calendar view; the
+  **End** key goes to the home screen (the system handles `KEYCODE_ENDCALL`; never consume it).
+  Views open each other with `CalendarActivity.openView` (`FLAG_ACTIVITY_REORDER_TO_FRONT`, the
+  date arrives in `onNewIntent`), so there is at most one of each and Back walks back through
+  them; Back on the first view leaves the app.
 - `LaunchActivity` reopens the last view (`Prefs.lastView`) on today. Detail, Settings pages
   and editors go back normally.
 
@@ -324,11 +333,12 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 | Key | Everywhere | Notes |
 |---|---|---|
 | **Left soft key** / `7` | **View**: Month → Week → Day → Agenda → Month | the screen's primary action (guide §1) |
-| **Right soft key** / `9` / `MENU` | **Options** menu, kept to five: New event, Sync now, Go to today, Settings, Show/hide disabled | `AlertDialog.setItems`; Software update and Key help live in Settings > App |
+| **Right soft key** / `9` / `MENU` | **Options** menu: New event, Sync now, Go to today, Settings, Calendars, Show/hide hidden | `AlertDialog.setItems`; Software update and Key help live in Settings > App. On the Calendars screen the right soft key is **Add** (owner) |
 | OK (`DPAD_CENTER` or `ENTER`) | open the focused item | Month: open selected day |
-| Back / Clear | calendar views: **exit** (next launch reopens that view); elsewhere: back | text fields: Clear deletes a character |
-| D-pad up/down | move focus | no wrap at the ends |
-| D-pad left/right | Week/Day/Agenda: previous/next day · Month: along the week row; past Saturday (the row's last column) → next month, past Sunday → previous month, same weekday and row (`MonthNav.moveHorizontal`) · editor rows: nudge (±1 day, ±15 min, next repeat) | skip while an `EditText` has focus |
+| Back / Clear | back to the previous screen (including the previous calendar view) | text fields: Clear deletes a character |
+| End | home screen | handled by the system |
+| D-pad up/down | move focus | no wrap at the ends; leaves a text field at its last/first line |
+| D-pad left/right | Week/Day/Agenda: previous/next day · Month: previous/next day, wrapping into the previous/next week · editor rows: nudge (±1 day, ±15 min, next repeat) | skip while an `EditText` has focus |
 | `1` / `3` | previous / next day (Day, Agenda), week (Week) or month (Month) | on the editor's date/time rows digits open the picker instead (`wantsDigits()`) |
 | `5` | jump to today | |
 | `0` | sync now (throttled) | |
@@ -412,8 +422,8 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
 
 ## 10. Look and feel
 
-- **Two themes**, picked in Settings > App > Theme (Dark default; no "follow system": Android 9
-  has none). Owner's other apps use purple and orange; never reuse those as accents.
+- **Two themes**, picked in Settings > App > Theme (**Light default**, owner round 6; no
+  "follow system": Android 9 has none). Owner's other apps use purple and orange; never reuse those as accents.
   - Dark: background `#000000`, surface `#121212`, text `#FFFFFF` / `#B3B3B3`, teal `#4DB6AC`.
   - Light: background `#FFFFFF`, surface `#F2F2F2`, text `#000000` / `#424242`, teal `#00796B`
     for bars and fills, `#00574B` for teal text.
@@ -439,8 +449,10 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
   the Back/Clear key. TurboCal therefore uses **Left = View switcher, Right = Options**, with
   `7`/`9` as aliases. Change this only on the owner's explicit instruction, and update §8 and the
   README together.
-- **Back exits from every calendar view** (owner, round 2), instead of the guide's "a sideways
-  screen goes back to a parent". The launcher reopens the view you left.
+- **Back goes back, End goes home** (owner, round 6, replacing round 2's "Back exits from every
+  calendar view"). The launcher reopens the view you were last on.
+- **Calendars screen soft keys** (owner, round 6): left = Edit, right = **Add**, instead of the
+  guide's right = Options.
 - **One writable calendar, "On this phone"** (owner, round 2). Subscribed feeds stay read-only:
   no editing, RSVP, CalDAV or account sign-in. Timed phone events are floating (they follow the
   phone's clock). Editing a repeating event edits the whole series; "Delete this one" adds an

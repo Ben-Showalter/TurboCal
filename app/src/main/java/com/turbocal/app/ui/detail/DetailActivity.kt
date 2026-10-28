@@ -73,10 +73,10 @@ class DetailActivity : FlipBaseActivity() {
             return
         }
         val e = event ?: return
-        // A fresh task, so the Day view is alone and Back exits, like every calendar view.
+        // Stacked, so Back returns to this event (owner, round 6).
         startActivity(
             CalendarActivity.intentFor(this, DayActivity::class.java, e.time.firstDay(ZoneId.systemDefault()))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
         )
     }
 

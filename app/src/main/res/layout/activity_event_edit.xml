@@ -29,6 +29,9 @@
                 android:hint="@string/event_title_hint"
                 android:inputType="textCapSentences" />
 
+            <!-- Save right under the title too, so a quick event is title, down, OK. -->
+            <Button android:id="@+id/save_top" style="@style/RowButton" android:text="@string/feed_save" />
+
             <TextView android:id="@+id/all_day" style="@style/StepperRow" />
             <TextView android:id="@+id/start_date" style="@style/StepperRow" />
             <TextView android:id="@+id/start_time" style="@style/StepperRow" />

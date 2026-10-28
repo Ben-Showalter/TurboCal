@@ -11,6 +11,7 @@ import com.turbocal.app.data.CalendarView
 import com.turbocal.app.sync.SyncScheduler
 import com.turbocal.app.sync.SyncState
 import com.turbocal.app.ui.agenda.AgendaActivity
+import com.turbocal.app.ui.calendars.CalendarsActivity
 import com.turbocal.app.ui.day.DayActivity
 import com.turbocal.app.ui.eventedit.EventEditActivity
 import com.turbocal.app.ui.month.MonthActivity
@@ -26,9 +27,9 @@ import java.util.Locale
 /**
  * What Month, Week, Day and Agenda share (AGENTS.md §8): the View key cycles
  * them in that order, Options opens the menu, the number keys are shortcuts,
- * and the status line shows sync state. Each view is alone on the back stack
- * (views switch with [jump]), so Back exits the app; the launcher reopens the
- * last view.
+ * and the status line shows sync state. Views stack (see [openView]), so
+ * Back/Clear returns to the previous view and End goes home (owner, round 6);
+ * the launcher reopens the last view.
  */
 abstract class CalendarActivity : FlipBaseActivity() {
 
@@ -92,17 +93,29 @@ abstract class CalendarActivity : FlipBaseActivity() {
     override fun onPrimaryKey() = switchTo(view.next())
 
     private fun switchTo(target: CalendarView) {
-        if (target != view) jump(intentFor(this, classFor(target), currentDate))
+        if (target != view) openView(classFor(target), currentDate)
+    }
+
+    /**
+     * Opens another calendar view on [date], stacked on this one so Back returns
+     * here (owner, round 6). REORDER_TO_FRONT reuses a view already in the stack
+     * (it gets the date through onNewIntent), so there is never more than one of each.
+     */
+    protected fun openView(cls: Class<out CalendarActivity>, date: LocalDate) {
+        startActivity(intentFor(this, cls, date).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION))
+        overridePendingTransition(0, 0)
     }
 
     override fun onOptionsKey() {
         // Kept short (owner): views switch with the View key; updates and key help live in Settings > App.
+        // Calendars (show/hide, add) added in round 6.
         val showing = graph.prefs.showDisabled.value
         val actions = listOf<Pair<String, () -> Unit>>(
             getString(R.string.menu_new_event) to { newEvent() },
             getString(R.string.menu_sync) to { syncNow() },
             getString(R.string.menu_today) to { goToday() },
             getString(R.string.menu_settings) to { openSettings() },
+            getString(R.string.menu_calendars) to { startActivity(Intent(this, CalendarsActivity::class.java)) },
             getString(if (showing) R.string.menu_hide_disabled else R.string.menu_show_disabled) to { toggleDisabled() },
         )
         AlertDialog.Builder(this).setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }.show()
@@ -161,10 +174,9 @@ abstract class CalendarActivity : FlipBaseActivity() {
                 val feeds = graph.database.dao().allFeeds().filter { !it.isLocal }
                 when {
                     feeds.isEmpty() -> toast(ctx.getString(R.string.toast_no_links))
-                    feeds.none { it.enabled } -> toast(ctx.getString(R.string.toast_no_feeds))
                     !SyncScheduler.isOnline(ctx) -> toast(ctx.getString(R.string.toast_offline)).also { SyncScheduler.syncNow(ctx) }
                     else -> {
-                        val wait = if (feeds.any { it.enabled && it.lastError != null }) null
+                        val wait = if (feeds.any { it.lastError != null }) null
                         else graph.throttle.minutesToWait(graph.prefs.lastCleanSyncAt, System.currentTimeMillis())
                         if (wait != null) {
                             toast(graph.throttle.message(wait))

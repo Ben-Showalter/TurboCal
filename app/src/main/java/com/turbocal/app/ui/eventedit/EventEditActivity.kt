@@ -85,6 +85,7 @@ class EventEditActivity : FlipBaseActivity() {
         allDayRow.onFocusChangeListener = View.OnFocusChangeListener { _, has -> if (has) hint.setText(R.string.hint_toggle) }
         for (f in listOf(title, location, notes)) f.onFocusChangeListener = View.OnFocusChangeListener { _, has -> if (has) hint.text = "" }
         findViewById<Button>(R.id.save).setOnClickListener { save() }
+        findViewById<Button>(R.id.save_top).setOnClickListener { save() }
         findViewById<Button>(R.id.cancel).setOnClickListener { finish() }
         val deleteButton = findViewById<Button>(R.id.delete)
         deleteButton.setOnClickListener { confirmDelete() }
