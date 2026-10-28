@@ -31,6 +31,17 @@ class CalendarRepository(private val dao: TurboCalDao, private val prefs: Prefs)
         }
     }
 
+    /** Shown calendars' events in [from, toExclusive), once (reminders; screens use [events]). */
+    suspend fun eventsOnce(from: LocalDate, toExclusive: LocalDate, zone: ZoneId): List<DisplayEvent> {
+        val fromInstant = from.atStartOfDay(zone).toInstant()
+        val toInstant = toExclusive.atStartOfDay(zone).toInstant()
+        return dao.eventsBetweenOnce(
+            fromInstant.toEpochMilli() - EventTime.KEY_SLACK_MILLIS,
+            toInstant.toEpochMilli() + EventTime.KEY_SLACK_MILLIS,
+            false,
+        ).map { it.toDisplay() }.filter { it.time.overlaps(fromInstant, toInstant, zone) }
+    }
+
     suspend fun event(id: Long): DisplayEvent? = dao.event(id)?.toDisplay()
 
     suspend fun eventRef(id: Long): EventRef? = dao.eventRef(id)

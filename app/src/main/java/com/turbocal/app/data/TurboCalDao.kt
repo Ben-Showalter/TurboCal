@@ -69,6 +69,15 @@ abstract class TurboCalDao {
     )
     abstract fun eventsBetween(fromKey: Long, toKey: Long, showDisabled: Boolean): Flow<List<EventWithFeed>>
 
+    /** One-shot copy of [eventsBetween], for the reminder scheduler. */
+    @Query(
+        "SELECT e.id, e.feedId, f.name AS feedName, f.color AS color, e.title, e.location, e.description, " +
+            "e.kind, e.startKey, e.endKey FROM events e INNER JOIN feeds f ON f.id = e.feedId " +
+            "WHERE e.endKey >= :fromKey AND e.startKey < :toKey AND (f.enabled = 1 OR :showDisabled = 1) " +
+            "ORDER BY e.startKey, e.id",
+    )
+    abstract suspend fun eventsBetweenOnce(fromKey: Long, toKey: Long, showDisabled: Boolean): List<EventWithFeed>
+
     @Query(
         "SELECT e.id, e.feedId, f.name AS feedName, f.color AS color, e.title, e.location, e.description, " +
             "e.kind, e.startKey, e.endKey FROM events e INNER JOIN feeds f ON f.id = e.feedId WHERE e.id = :id",

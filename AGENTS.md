@@ -68,7 +68,9 @@ When you learn a new device quirk while working here, add it to the guide as wel
   Use `java.time` for all date maths in our code. Never use `java.util.Date`/`Calendar` outside
   the ical4j mapping layer.
 - Manifest: `touchscreen required="false"`, the flip `configChanges` from the guide, portrait
-  lock, `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES` (§9),
+  lock, `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES` (§9), reminders:
+  `POST_NOTIFICATIONS` (asked at runtime only on API 33+), `VIBRATE`, `RECEIVE_BOOT_COMPLETED`,
+  `SCHEDULE_EXACT_ALARM` (`maxSdkVersion 32`) / `USE_EXACT_ALARM`,
   `READ_EXTERNAL_STORAGE` with `maxSdkVersion="32"` (feed import, §7), `allowBackup="false"`.
 - **No DI framework.** Use one hand-written `AppGraph` created in `TurboCalApp`. The app is too
   small to justify Hilt.
@@ -100,6 +102,8 @@ core/                      PURE KOTLIN/JVM — no android.* (it can't compile ag
   sync/                    HttpTransport + UrlConnectionTransport, FeedFetcher (ETag/304/errors), ManualSyncThrottle
   update/                  ReleaseCheck (GitHub releases/latest, asset pick), VersionCompare
   local/                   LocalCalendar (phone calendar ↔ ical4j: expand, export, import), RepeatChoice
+  notify/                  Reminders (when each event notifies, grouping), ReminderTexts, CoverText (outer-display ticker)
+  input/                   KeypadEntry (date/time picker typing)
   display/                 AgendaBuilder, WeekBuilder, DayBuilder, MonthGrid, Formats — every string a screen shows
   src/test/resources/ics/  the fixture .ics files (§6)
 app/                       Android: storage, background work, screens
@@ -107,6 +111,8 @@ app/                       Android: storage, background work, screens
   data/                    Room entities/DAO/database, Prefs, CalendarRepository
   sync/                    SyncRunner (fetch → store), LocalCalendarRunner (phone calendar), SyncWorker, SyncScheduler, SyncState
   update/                  UpdateManager (download, verify, install), UpdateStatus
+  notify/                  ReminderScheduler (one exact alarm), ReminderReceiver, BootReceiver, ReminderNotifier,
+                           CoverScreenNotifier (Kyocera outer display, ported from MatChat)
   feeds/                   FeedFileImporter (finds turbocal_feeds.json)
   ui/LaunchActivity        launcher trampoline: opens the last-used view
   ui/base/                 FlipBaseActivity (keys, theme), KeyMap, SystemBars, CalendarActivity, RowAdapter
@@ -224,6 +230,7 @@ named compatibility quirks below.
 | Updater | `VersionCompare` tests and an asset-picking test against a canned `releases/latest` JSON |
 | `:core` `local/` | A `LocalCalendarTest` case (expansion, EXDATE, export → import round trip) |
 | Room schema | A migration step + `MigrationTest` |
+| `:core` `notify/` | A `NotifyTest` case (notify time, grouping, text) |
 
 **The required fixture set** (one small file each, with expected instances written out in the test):
 
@@ -304,8 +311,28 @@ Screens:
 - **Calendars** (Options > Calendars, also Settings > Calendars): every calendar with its
   status. OK shows/hides it; left soft key **Edit** (edit, sync or export, delete); right soft
   key **Add** (import feeds file, type a link, import .ics into the phone calendar).
-- **Settings** is a menu: **Sync** (Sync now, interval), **Calendars** (opens the screen
-  above), **App** (theme, show hidden calendars, software update, key help).
+- **Settings** is a menu: **Sync** (Sync now, interval), **Notifications** (on/off, lead time,
+  all-day time, outer display, test), **Calendars** (opens the screen above), **App** (theme,
+  show hidden calendars, software update, key help).
+
+### Notifications (owner, round 7)
+- **On by default, 5 minutes before** (choices: at start, 5/10/15/30 min before). All-day events
+  notify on their first day at a chosen time (default 8:00 AM), with no lead. Only shown
+  calendars notify; one master switch.
+- **Events that notify at the same instant are one notification** (`Reminders.nextGroup` /
+  `groupAt`), inbox-style with a line per event; the text comes from core `ReminderTexts`.
+- **One exact alarm at a time** (`ReminderScheduler`, AlarmManager per the guide:
+  `setExactAndAllowWhileIdle`, falling back to `setAndAllowWhileIdle` when API 31+ refuses exact
+  alarms). It's re-armed after every sync, phone-calendar edit, settings change, boot/update, app
+  start and clock or zone change. At fire time the group is re-read from the database, and
+  `lastReminderAt` stops repeats; a group missed by over 10 minutes (phone off) isn't posted late.
+- **Channel** "Event starts" (high importance, sound, vibration, LED) plus `setLights(BLUE, 1, 0)`
+  per the guide. Tapping opens the Day view; the notification and its outer-display card share
+  one id (the reminder minute), so cancel always matches post.
+- **Outer display** (`CoverScreenNotifier`, guide docs/platform.md "Outer display and LED"): one
+  line with the time in front ("9:25 AM · Dentist in 5 min"), scrolled by reposting, a duration on
+  every post, shown again when the flip closes (SCREEN_OFF), cleared when the notification is
+  dismissed or a calendar view opens. Never call `notifyIconToAnnunciatorTray`.
 - **Text fields never trap focus:** `FlipBaseActivity` moves focus out of an `EditText` on D-pad
   down at its last line / up at its first line, before the system T9 sees the key (the T9
   otherwise keeps the D-pad and soft keys, which made Save unreachable). The event editor also
@@ -458,8 +485,8 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
   phone's clock). Editing a repeating event edits the whole series; "Delete this one" adds an
   EXDATE. Because `allowBackup=false`, Settings > Calendars has Export/Import of
   `turbocal_local.ics`, and the README tells the user to export before reinstalling.
-- No outer-display (sub-LCD) cards and no notifications/reminders in v1. Ask first: a sub-LCD
-  card covers the phone's clock (guide checklist).
+- **Reminders and outer-display cards were added on the owner's request (round 7)**; the owner
+  chose to show the time on the card, since it covers the outer clock (guide checklist).
 - No search box over events in v1.
 
 ## 12. Build stages (do them in order; each ends green)

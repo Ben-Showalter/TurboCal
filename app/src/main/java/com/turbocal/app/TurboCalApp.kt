@@ -18,14 +18,23 @@ class TurboCalApp : Application() {
         Ical4jConfig.apply()
         graph = AppGraph(this)
         SyncScheduler.schedulePeriodic(this, graph.prefs.syncIntervalMinutes)
-        // The expansion window is in local dates: re-sync after a zone change.
+        graph.reminders.notifier.ensureChannel()
+        graph.reminders.rescheduleAsync()
+        // The expansion window is in local dates: re-sync after a zone change. Reminder
+        // times are wall-clock times too, so a zone or clock change moves the alarm.
         ContextCompat.registerReceiver(
             this,
             object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) = SyncScheduler.syncNow(context)
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (intent.action == Intent.ACTION_TIMEZONE_CHANGED) SyncScheduler.syncNow(context)
+                    graph.reminders.rescheduleAsync()
+                }
             },
-            IntentFilter(Intent.ACTION_TIMEZONE_CHANGED),
-            ContextCompat.RECEIVER_NOT_EXPORTED, // a system broadcast still arrives; other apps' don't
+            IntentFilter().apply {
+                addAction(Intent.ACTION_TIMEZONE_CHANGED)
+                addAction(Intent.ACTION_TIME_CHANGED)
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED, // system broadcasts still arrive; other apps' don't
         )
     }
 }

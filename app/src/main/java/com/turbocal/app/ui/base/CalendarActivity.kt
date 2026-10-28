@@ -1,8 +1,11 @@
 package com.turbocal.app.ui.base
 
+import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.ListView
 import android.text.format.DateFormat
@@ -53,17 +56,28 @@ abstract class CalendarActivity : FlipBaseActivity() {
         super.onCreate(savedInstanceState)
         openedOn = today
         scope.launch { graph.updates.checkForUpdate(force = false) } // at most daily
+        askNotificationPermissionOnce()
     }
 
     override fun onResume() {
         super.onResume()
         if (isFinishing || recreating) return
         graph.prefs.lastView = view
+        // The calendar is open, so reminder cards on the outer display have been seen.
+        graph.reminders.notifier.clearCovers()
         // Left open past midnight: rebuild so "Today" and the window move on.
         if (openedOn != null && openedOn != today) {
             openedOn = today
             jump(intentFor(this, javaClass, today))
         }
+    }
+
+    /** Android 13+ needs the user's yes before notifications show; ask once (the E4810, Android 9, never asks). */
+    private fun askNotificationPermissionOnce() {
+        if (Build.VERSION.SDK_INT < 33 || !graph.prefs.notifyEnabled || graph.prefs.askedNotifyPermission) return
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        graph.prefs.askedNotifyPermission = true
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
     }
 
     /** The calendar views' lists use the rounded selection box (owner, round 4); Settings keeps the square one. */

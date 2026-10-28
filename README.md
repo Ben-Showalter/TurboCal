@@ -51,6 +51,30 @@ The first launch opens Month. After that TurboCal opens the view you left, on to
 In Settings the left soft key is **Sync** and the right one shows this key list. In a text
 field the keys type, and Clear deletes a character.
 
+## Notifications
+
+TurboCal reminds you before events start. It is **on by default, 5 minutes before**.
+
+- Events that start together come as **one notification** listing all of them, e.g.
+  "3 events in 5 min".
+- All-day events notify on their first day at **8:00 AM** (you can change the time).
+- With the flip closed, the reminder also shows on the **outer display** with the time in front,
+  scrolling if it's long ("9:25 AM · Dentist in 5 min"). It shows again each time you close the
+  flip, until you open TurboCal or clear the notification.
+- Hidden calendars don't notify. Tapping a notification opens that day.
+
+Settings → **Notifications**:
+
+| Row | Does |
+|---|---|
+| Event notifications | On / Off |
+| Notify | When the event starts, or 5 / 10 / 15 / 30 min before |
+| All-day events at | Opens the time picker |
+| Outer display | On / Off |
+| Send a test notification | Checks sound, vibration, light and the outer display now |
+
+Sound and vibration follow the phone's settings for TurboCal's "Event starts" notifications.
+
 ## Calendars
 
 Options → **Calendars** (or Settings → Calendars) lists every calendar with its status:
@@ -67,7 +91,8 @@ Options → **Calendars** (or Settings → Calendars) lists every calendar with 
 `*` opens a menu:
 
 - **Sync:** Sync now, and how often to sync in the background.
-- **Calendars:** opens the Calendars screen above.
+- **Notifications:** see above.
+- **Calendars:** opens the Calendars screen.
 - **App:** Theme (Light or Dark, OK to switch; Light is the default), Show hidden calendars,
   Software update, Key help.
 

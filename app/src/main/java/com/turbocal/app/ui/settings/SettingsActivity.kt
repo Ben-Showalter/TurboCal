@@ -18,6 +18,9 @@ import com.turbocal.app.sync.SyncState
 import com.turbocal.app.ui.base.CalendarActivity
 import com.turbocal.app.ui.base.FlipBaseActivity
 import com.turbocal.app.ui.calendars.CalendarsActivity
+import com.turbocal.app.ui.eventedit.KeypadPicker
+import com.turbocal.core.notify.Reminders
+import java.time.LocalTime
 import com.turbocal.app.ui.update.UpdateActivity
 import com.turbocal.app.update.UpdateStatus
 import com.turbocal.core.display.Formats
@@ -35,7 +38,7 @@ import java.util.Locale
  */
 class SettingsActivity : FlipBaseActivity() {
 
-    enum class Page { MENU, SYNC, APP }
+    enum class Page { MENU, SYNC, NOTIFICATIONS, APP }
 
     private sealed class Item {
         abstract val id: Long
@@ -60,6 +63,7 @@ class SettingsActivity : FlipBaseActivity() {
             when (page) {
                 Page.MENU -> getString(R.string.title_settings)
                 Page.SYNC -> getString(R.string.settings_header_sync)
+                Page.NOTIFICATIONS -> getString(R.string.settings_header_notifications)
                 Page.APP -> getString(R.string.settings_header_app)
             },
         )
@@ -87,6 +91,7 @@ class SettingsActivity : FlipBaseActivity() {
         val items = when (page) {
             Page.MENU -> menuItems()
             Page.SYNC -> syncItems()
+            Page.NOTIFICATIONS -> notificationItems()
             Page.APP -> appItems()
         }
         val selectedId = list.selectedItemId.takeIf { list.selectedItemPosition >= 0 }
@@ -115,6 +120,7 @@ class SettingsActivity : FlipBaseActivity() {
         val app = getString(R.string.settings_app_summary, graph.prefs.theme.label, graph.updates.currentVersion()) + badge
         return listOf(
             Item.Action("page:SYNC", getString(R.string.settings_header_sync), syncSummary(), 1),
+            Item.Action("page:NOTIFICATIONS", getString(R.string.settings_header_notifications), notifySummary(), 4),
             Item.Action("calendars", getString(R.string.settings_header_calendars), calendars, 2),
             Item.Action("page:APP", getString(R.string.settings_header_app), app, 3),
         )
@@ -124,6 +130,39 @@ class SettingsActivity : FlipBaseActivity() {
         Item.Action("sync", getString(R.string.settings_sync_now), syncSummary(), 1),
         Item.Action("interval", getString(R.string.settings_interval), Prefs.intervalLabel(graph.prefs.syncIntervalMinutes), 2),
     )
+
+    private fun leadLabel(minutes: Int): String =
+        if (minutes == 0) getString(R.string.notify_lead_at_start) else getString(R.string.notify_lead_before, minutes)
+
+    private fun allDayTime(): LocalTime = LocalTime.of(graph.prefs.allDayNotifyMinutes / 60, graph.prefs.allDayNotifyMinutes % 60)
+
+    private fun notifySummary(): String =
+        if (!graph.prefs.notifyEnabled) getString(R.string.off)
+        else getString(R.string.notify_summary_on, leadLabel(graph.prefs.notifyLeadMinutes).lowercase(), formats.time(allDayTime()))
+
+    /** Settings > Notifications (owner, round 7): on by default, 5 min before, all-day at 8:00 AM. */
+    private fun notificationItems(): List<Item> {
+        val on = graph.prefs.notifyEnabled
+        val items = arrayListOf<Item>(
+            Item.Action("notify_on", getString(R.string.notify_enabled), getString(if (on) R.string.on else R.string.off), 1),
+        )
+        if (on) {
+            items += Item.Action("notify_lead", getString(R.string.notify_lead), leadLabel(graph.prefs.notifyLeadMinutes), 2)
+            items += Item.Action("notify_allday", getString(R.string.notify_allday), formats.time(allDayTime()), 3)
+            items += Item.Action(
+                "notify_cover", getString(R.string.notify_cover),
+                getString(if (graph.prefs.coverCards) R.string.on else R.string.off) + " · " + getString(R.string.notify_cover_sub), 4,
+            )
+            items += Item.Action("notify_test", getString(R.string.notify_test), "", 5)
+        }
+        return items
+    }
+
+    /** Any notification setting changed: redraw and move the alarm. */
+    private fun notifyChanged() {
+        render()
+        graph.reminders.rescheduleAsync()
+    }
 
     private fun appItems(): List<Item> {
         val badge = (updateStatus as? UpdateStatus.Available)?.let { " · " + getString(R.string.update_badge, it.info.tag) } ?: ""
@@ -147,6 +186,27 @@ class SettingsActivity : FlipBaseActivity() {
                 item.key == "sync" -> CalendarActivity.syncNow(this)
                 item.key == "interval" -> chooseInterval()
                 item.key == "calendars" -> startActivity(Intent(this, CalendarsActivity::class.java))
+                item.key == "notify_on" -> {
+                    graph.prefs.notifyEnabled = !graph.prefs.notifyEnabled
+                    notifyChanged()
+                }
+                item.key == "notify_lead" -> {
+                    val choices = Reminders.LEAD_CHOICES
+                    graph.prefs.notifyLeadMinutes = choices[(choices.indexOf(graph.prefs.notifyLeadMinutes) + 1) % choices.size]
+                    notifyChanged()
+                }
+                item.key == "notify_allday" -> KeypadPicker.pickTime(this, getString(R.string.picker_allday_time), allDayTime(), null) {
+                    graph.prefs.allDayNotifyMinutes = it.hour * 60 + it.minute
+                    notifyChanged()
+                }
+                item.key == "notify_cover" -> {
+                    graph.prefs.coverCards = !graph.prefs.coverCards
+                    render()
+                }
+                item.key == "notify_test" -> {
+                    graph.reminders.sendTest()
+                    toast(R.string.notify_test_sent)
+                }
                 item.key == "theme" -> toggleTheme()
                 item.key == "disabled" -> graph.prefs.setShowDisabled(!graph.prefs.showDisabled.value)
                 item.key == "update" -> startActivity(Intent(this, UpdateActivity::class.java))

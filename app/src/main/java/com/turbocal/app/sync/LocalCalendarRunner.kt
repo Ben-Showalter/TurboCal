@@ -24,6 +24,8 @@ import java.time.ZoneId
 class LocalCalendarRunner(
     private val dao: TurboCalDao,
     private val clock: () -> Long = System::currentTimeMillis,
+    /** Runs after the stored instances change (reschedules reminders). */
+    private val onChanged: suspend () -> Unit = {},
 ) {
 
     /** The phone calendar, created on first use. */
@@ -75,6 +77,7 @@ class LocalCalendarRunner(
             )
         }
         dao.replaceEvents(feedId, rows, null, null, clock())
+        onChanged()
     }
 
     /** Writes the whole phone calendar to [file] as .ics; returns the event count. */

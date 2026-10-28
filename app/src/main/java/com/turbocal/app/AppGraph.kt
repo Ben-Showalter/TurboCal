@@ -5,6 +5,8 @@ import com.turbocal.app.data.CalendarRepository
 import com.turbocal.app.data.Prefs
 import com.turbocal.app.data.TurboCalDatabase
 import com.turbocal.app.feeds.FeedFileImporter
+import com.turbocal.app.notify.ReminderNotifier
+import com.turbocal.app.notify.ReminderScheduler
 import com.turbocal.app.sync.LocalCalendarRunner
 import com.turbocal.app.sync.SyncRunner
 import com.turbocal.app.update.UpdateManager
@@ -22,8 +24,10 @@ class AppGraph(context: Context) {
     val database = TurboCalDatabase.create(app)
     val repository = CalendarRepository(database.dao(), prefs)
     val transport = UrlConnectionTransport(userAgent = "TurboCal/$version")
-    val local = LocalCalendarRunner(database.dao())
-    val syncRunner = SyncRunner(database.dao(), FeedFetcher(transport), prefs, local)
+    val reminders = ReminderScheduler(app, prefs, repository, ReminderNotifier(app, prefs))
+    // Every change to stored events moves the next reminder alarm.
+    val local = LocalCalendarRunner(database.dao(), onChanged = { reminders.reschedule() })
+    val syncRunner = SyncRunner(database.dao(), FeedFetcher(transport), prefs, local, onChanged = { reminders.reschedule() })
     val throttle = ManualSyncThrottle()
     val updates = UpdateManager(app, prefs, ReleaseCheck(transport))
     val importer = FeedFileImporter(app)

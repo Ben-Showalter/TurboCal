@@ -26,6 +26,8 @@ class SyncRunner(
     private val fetcher: FeedFetcher,
     private val prefs: Prefs,
     private val local: LocalCalendarRunner = LocalCalendarRunner(dao),
+    /** Runs after a sync pass (reschedules reminders). */
+    private val onChanged: suspend () -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -41,6 +43,7 @@ class SyncRunner(
             if (feed.isLocal) local.reexpand(feed.id) else if (!syncOne(feed, window)) allOk = false
         }
         if (onlyFeedId == null && allOk && feeds.any { !it.isLocal }) prefs.lastCleanSyncAt = clock()
+        onChanged()
     }
 
     private suspend fun syncOne(feed: FeedEntity, window: ExpansionWindow): Boolean {
