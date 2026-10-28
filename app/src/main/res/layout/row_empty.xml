@@ -7,5 +7,5 @@
     android:minHeight="@dimen/row_min_height"
     android:paddingStart="18dp"
     android:paddingEnd="@dimen/gutter"
-    android:textColor="@color/text_secondary"
+    android:textColor="?attr/tcTextSecondary"
     android:textSize="@dimen/text_body" />

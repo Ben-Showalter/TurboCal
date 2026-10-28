@@ -4,7 +4,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="?attr/tcBackground"
     android:orientation="vertical">
 
     <include layout="@layout/title_bar" />
@@ -15,7 +15,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:cacheColorHint="@android:color/transparent"
-        android:divider="@color/divider"
+        android:divider="?attr/tcDivider"
         android:dividerHeight="1dp"
         android:drawSelectorOnTop="true"
         android:focusable="true"

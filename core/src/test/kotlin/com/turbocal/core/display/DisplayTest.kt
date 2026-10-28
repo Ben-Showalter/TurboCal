@@ -59,17 +59,35 @@ class DisplayTest {
         assertTrue(DayBuilder.build(events, LocalDate.of(2026, 11, 3), zone, fmt).single() is Row.Empty)
     }
 
-    @Test fun `month grid is six weeks from the first weekday with dots`() {
+    @Test fun `month grid is six weeks from the first weekday and lists every event per cell`() {
         val g = MonthGrid.build(YearMonth.of(2026, 10), DayOfWeek.SUNDAY, today, events, zone)
         assertEquals(42, g.cells.size)
         assertEquals(LocalDate.of(2026, 9, 27), g.gridStart)
         assertEquals(DayOfWeek.SUNDAY, g.gridStart.dayOfWeek)
+        // Day-view order: all-day first, then by time; the multi-day holiday is in both cells.
         val oct28 = g.cells.first { it.date == LocalDate.of(2026, 10, 28) }
-        assertEquals(listOf(1), oct28.colors)
+        assertEquals(listOf("Holiday", "Dentist", "Late show"), oct28.events.map { it.title })
+        val oct29 = g.cells.first { it.date == LocalDate.of(2026, 10, 29) }
+        assertEquals(listOf("Holiday", "Late show"), oct29.events.map { it.title })
         assertTrue(g.cells.first { it.date == today }.isToday)
-        assertTrue(g.cells.first { it.date == LocalDate.of(2026, 10, 30) }.colors.isEmpty()) // DTEND exclusive
+        assertTrue(g.cells.first { it.date == LocalDate.of(2026, 10, 30) }.events.isEmpty()) // DTEND exclusive
         val monday = MonthGrid.range(YearMonth.of(2026, 11), DayOfWeek.MONDAY).first
         assertEquals(LocalDate.of(2026, 10, 26), monday)
+    }
+
+    @Test fun `week shows all seven days with headers, empty days included`() {
+        val start = WeekBuilder.weekStart(today, DayOfWeek.SUNDAY)
+        assertEquals(LocalDate.of(2026, 10, 25), start)
+        assertEquals(LocalDate.of(2026, 10, 26), WeekBuilder.weekStart(today, DayOfWeek.MONDAY))
+        val rows = WeekBuilder.build(events, start, today, zone, fmt)
+        val headers = rows.filterIsInstance<Row.DayHeader>().map { it.date }
+        assertEquals((25..31).map { LocalDate.of(2026, 10, it) }, headers)
+        // Sunday 25th has nothing; the holiday shows on the 28th and 29th.
+        assertTrue(rows[1] is Row.Empty)
+        assertEquals(2, rows.filterIsInstance<Row.Event>().count { it.title == "Holiday" })
+        assertEquals("Oct 25 – 31", fmt.weekTitle(start, today))
+        assertEquals("Oct 29 – Nov 4", fmt.weekTitle(LocalDate.of(2026, 10, 29), today))
+        assertEquals("Dec 27 – Jan 2, 2027", fmt.weekTitle(LocalDate.of(2026, 12, 27), today))
     }
 
     @Test fun `month navigation`() {

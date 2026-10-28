@@ -39,7 +39,22 @@ class Formats(locale: Locale = Locale.getDefault(), use24h: Boolean = false) {
     fun dayTitle(day: LocalDate, today: LocalDate): String =
         if (day.year == today.year) dayShort.format(day) else dayYear.format(day)
 
+    /** "Wed, Oct 28 · 3 events" above the month view's day list. */
+    fun dayInfoHeader(day: LocalDate, today: LocalDate, count: Int): String = dayTitle(day, today) + " · " + when (count) {
+        0 -> "No events"
+        1 -> "1 event"
+        else -> "$count events"
+    }
+
     fun monthTitle(day: LocalDate): String = monthYear.format(day)
+
+    /** "Oct 25 – 31", "Oct 29 – Nov 4", or with years when the week isn't in this year. */
+    fun weekTitle(start: LocalDate, today: LocalDate): String {
+        val end = start.plusDays(6)
+        val left = dateShort.format(start)
+        val right = if (end.month == start.month) end.dayOfMonth.toString() else dateShort.format(end)
+        return if (start.year == today.year && end.year == today.year) "$left – $right" else "$left – $right, ${end.year}"
+    }
 
     fun weekdayLetter(day: LocalDate): String = weekdayLetter.format(day)
 

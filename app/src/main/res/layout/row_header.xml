@@ -3,7 +3,7 @@
     android:id="@+id/text"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/surface_header"
+    android:background="?attr/tcSurfaceHeader"
     android:ellipsize="end"
     android:maxLines="1"
     android:minHeight="24dp"
@@ -11,5 +11,5 @@
     android:paddingTop="2dp"
     android:paddingEnd="@dimen/gutter"
     android:paddingBottom="2dp"
-    android:textColor="@color/accent"
+    android:textColor="?attr/tcAccentText"
     android:textSize="@dimen/text_label" />

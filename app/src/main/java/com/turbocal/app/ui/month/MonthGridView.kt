@@ -2,7 +2,6 @@ package com.turbocal.app.ui.month
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
@@ -15,9 +14,12 @@ import com.turbocal.core.display.MonthGrid
 import java.time.LocalDate
 
 /**
- * Draws the six-week grid: weekday letters, day numbers, up to three
- * calendar-colour dots per day, a teal ring on today and a filled teal
- * highlight on the selected day. It owns the D-pad while focused.
+ * The six-week grid. Every cell is a bordered block: the day number at the
+ * top-left, then one full-width stripe per event in its calendar's colour,
+ * stacked in Day-view order, with "+N" in the top corner for the rest. The selected
+ * cell gets a thick accent border over the focus fill; today's number sits
+ * on an accent circle. It owns the D-pad while focused. Colours come from
+ * the theme, so it follows Dark/Light.
  */
 class MonthGridView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
@@ -33,17 +35,33 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
     private var letters: List<String> = emptyList()
     private var centerDown = false
 
-    private val accent = context.getColor(R.color.accent)
-    private val primary = context.getColor(R.color.text_primary)
-    private val secondary = context.getColor(R.color.text_secondary)
-    private val dim = Color.argb(255, 110, 110, 110)
+    private fun attr(id: Int): Int {
+        val a = context.obtainStyledAttributes(intArrayOf(id))
+        try {
+            return a.getColor(0, 0)
+        } finally {
+            a.recycle()
+        }
+    }
+
+    private val accent = attr(R.attr.tcAccent)
+    private val onAccent = attr(R.attr.tcOnAccent)
+    private val primary = attr(R.attr.tcTextPrimary)
+    private val secondary = attr(R.attr.tcTextSecondary)
+    private val gridLine = attr(R.attr.tcGridLine)
+    private val outOfMonth = attr(R.attr.tcOutOfMonth)
+    private val focusFill = attr(R.attr.tcFocusFill)
+    private val headerBg = attr(R.attr.tcSurfaceHeader)
+
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
     private fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, resources.displayMetrics)
 
-    private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER; textSize = sp(15f) }
+    private val number = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.LEFT; textSize = sp(12f) }
+    private val more = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.RIGHT; textSize = sp(10f) }
     private val header = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER; textSize = sp(11f); color = secondary }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = accent }
+    private val fill = Paint()
+    private val line = Paint().apply { color = gridLine; strokeWidth = dp(1f) }
+    private val border = Paint().apply { style = Paint.Style.STROKE; strokeWidth = dp(3f); color = accent }
     private val rect = RectF()
 
     init {
@@ -91,39 +109,81 @@ class MonthGridView @JvmOverloads constructor(context: Context, attrs: Attribute
         val headerH = dp(16f)
         val cellW = width / 7f
         val cellH = (height - headerH) / MonthGrid.WEEKS
-        for (c in 0 until 7) {
-            canvas.drawText(letters.getOrElse(c) { "" }, cellW * c + cellW / 2, headerH - dp(4f), header)
-        }
-        val dotR = dp(2.5f)
+
+        // Weekday letters on a header band.
+        fill.color = headerBg
+        canvas.drawRect(0f, 0f, width.toFloat(), headerH, fill)
+        for (c in 0 until 7) canvas.drawText(letters.getOrElse(c) { "" }, cellW * c + cellW / 2, headerH - dp(4f), header)
+
+        val pad = dp(2f)
+        val stripeH = dp(3f)
+        val gap = dp(1f)
+        val numberH = number.textSize + dp(2f)
+
         g.cells.forEachIndexed { i, cell ->
             val col = i % 7
             val row = i / 7
-            rect.set(cellW * col + dp(1f), headerH + cellH * row + dp(1f), cellW * (col + 1) - dp(1f), headerH + cellH * (row + 1) - dp(1f))
+            val left = cellW * col
+            val top = headerH + cellH * row
+            rect.set(left, top, left + cellW, top + cellH)
             val isSelected = cell.date == selected
+
+            if (!cell.inMonth) {
+                fill.color = outOfMonth
+                canvas.drawRect(rect, fill)
+            }
             if (isSelected) {
+                fill.color = focusFill
+                canvas.drawRect(rect, fill)
+            }
+
+            // Day number, on an accent circle for today.
+            val nx = left + pad + dp(1f)
+            val ny = top + pad + number.textSize
+            number.isFakeBoldText = isSelected || cell.isToday // stock font has no bold (guide §4)
+            if (cell.isToday) {
                 fill.color = accent
-                canvas.drawRoundRect(rect, dp(4f), dp(4f), fill)
-            } else if (cell.isToday) {
-                canvas.drawRoundRect(rect, dp(4f), dp(4f), ring)
+                val label = cell.date.dayOfMonth.toString()
+                val w = number.measureText(label)
+                canvas.drawCircle(nx + w / 2, ny - number.textSize / 3, number.textSize * 0.75f, fill)
+                number.color = onAccent
+            } else {
+                number.color = if (cell.inMonth) primary else secondary
             }
-            text.color = when {
-                isSelected -> Color.BLACK
-                !cell.inMonth -> dim
-                else -> primary
+            canvas.drawText(cell.date.dayOfMonth.toString(), nx, ny, number)
+
+            // One full-width stripe per event, stacked; "+N" when they don't fit.
+            val stripesTop = top + pad + numberH
+            val room = ((rect.bottom - pad - stripesTop + gap) / (stripeH + gap)).toInt().coerceAtLeast(0)
+            val events = cell.events
+            val shown = minOf(events.size, room)
+            for (k in 0 until shown) {
+                val y = stripesTop + k * (stripeH + gap)
+                fill.color = events[k].color
+                canvas.drawRect(left + pad, y, left + cellW - pad, y + stripeH, fill)
             }
-            text.isFakeBoldText = isSelected || cell.isToday // stock font has no bold (guide §4)
-            val baseline = rect.centerY() + text.textSize / 3 - if (cell.colors.isEmpty()) 0f else dp(3f)
-            canvas.drawText(cell.date.dayOfMonth.toString(), rect.centerX(), baseline, text)
-            if (cell.colors.isNotEmpty()) {
-                val y = rect.bottom - dotR * 2
-                val spacing = dotR * 3
-                var x = rect.centerX() - spacing * (cell.colors.size - 1) / 2
-                for (color in cell.colors) {
-                    fill.color = if (isSelected) Color.BLACK else color
-                    canvas.drawCircle(x, y, dotR, fill)
-                    x += spacing
-                }
+            val hidden = events.size - shown
+            if (hidden > 0) {
+                more.color = if (cell.inMonth) primary else secondary
+                more.isFakeBoldText = true
+                canvas.drawText("+$hidden", left + cellW - pad, top + pad + more.textSize, more)
             }
+        }
+
+        // Grid lines between all blocks.
+        for (c in 1 until 7) canvas.drawLine(cellW * c, headerH, cellW * c, height.toFloat(), line)
+        for (r in 0..MonthGrid.WEEKS) {
+            val y = headerH + cellH * r
+            canvas.drawLine(0f, y, width.toFloat(), y, line)
+        }
+
+        // Selection border last, over the lines.
+        val si = g.cells.indexOfFirst { it.date == selected }
+        if (si >= 0) {
+            val half = border.strokeWidth / 2
+            val left = cellW * (si % 7)
+            val top = headerH + cellH * (si / 7)
+            canvas.drawRect(left + half, top + half, left + cellW - half, top + cellH - half, border)
         }
     }
 }

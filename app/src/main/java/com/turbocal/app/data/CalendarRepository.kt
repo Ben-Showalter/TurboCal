@@ -33,6 +33,10 @@ class CalendarRepository(private val dao: TurboCalDao, private val prefs: Prefs)
 
     suspend fun event(id: Long): DisplayEvent? = dao.event(id)?.toDisplay()
 
+    suspend fun eventRef(id: Long): EventRef? = dao.eventRef(id)
+
+    fun localEventCount(feedId: Long): Flow<Int> = dao.localEventCount(feedId)
+
     suspend fun feed(id: Long): FeedEntity? = dao.feed(id)
 
     suspend fun addFeed(name: String, url: String, color: Int?, enabled: Boolean): Long {
@@ -60,7 +64,7 @@ class CalendarRepository(private val dao: TurboCalDao, private val prefs: Prefs)
 
     suspend fun deleteFeed(id: Long) = dao.deleteFeed(id)
 
-    suspend fun existingForImport(): List<ExistingFeed> = dao.allFeeds().map { ExistingFeed(it.id, it.url) }
+    suspend fun existingForImport(): List<ExistingFeed> = dao.allFeeds().filter { !it.isLocal }.map { ExistingFeed(it.id, it.url) }
 
     /** Applies a planned import; returns the ids of new feeds so they can be synced at once. */
     suspend fun applyImport(plan: ImportPlan): List<Long> {

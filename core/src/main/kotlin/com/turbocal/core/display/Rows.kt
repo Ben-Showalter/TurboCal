@@ -31,8 +31,8 @@ sealed class Row {
 
 private val NO_TITLE = "(No title)"
 
-/** All-day first, then by start, then title — the order both lists use. */
-private fun sortForDay(events: List<DisplayEvent>, zone: ZoneId) = events.sortedWith(
+/** All-day first, then by start, then title — the order every view uses. */
+internal fun sortForDay(events: List<DisplayEvent>, zone: ZoneId) = events.sortedWith(
     compareBy<DisplayEvent>({ if (it.time is EventTime.AllDay) 0 else 1 }, { it.time.startInstant(zone) }, { it.title.lowercase() }),
 )
 
@@ -58,8 +58,16 @@ object AgendaBuilder {
         today: LocalDate,
         zone: ZoneId,
         fmt: Formats,
+        includeEmptyDays: Boolean = false,
     ): List<Row> {
         val byDay = java.util.TreeMap<LocalDate, MutableList<DisplayEvent>>()
+        if (includeEmptyDays) {
+            var d = from
+            while (d.isBefore(toExclusive)) {
+                byDay[d] = mutableListOf()
+                d = d.plusDays(1)
+            }
+        }
         for (e in events) {
             var d = maxOf(e.time.firstDay(zone), from)
             val last = minOf(e.time.lastDay(zone), toExclusive.minusDays(1))
@@ -100,6 +108,15 @@ object AgendaBuilder {
         is Row.Event -> row.date
         is Row.Empty -> row.date
     }
+}
+
+/** Week view: all seven days, each with a header, empty days included. */
+object WeekBuilder {
+    fun weekStart(day: LocalDate, firstDayOfWeek: java.time.DayOfWeek): LocalDate =
+        day.minusDays(Math.floorMod(day.dayOfWeek.value - firstDayOfWeek.value, 7).toLong())
+
+    fun build(events: List<DisplayEvent>, weekStart: LocalDate, today: LocalDate, zone: ZoneId, fmt: Formats): List<Row> =
+        AgendaBuilder.build(events, weekStart, weekStart.plusDays(7), today, zone, fmt, includeEmptyDays = true)
 }
 
 /** Day view: that day's events, all-day ones at the top. */

@@ -12,6 +12,7 @@ local.properties
 
 # Secrets: never commit (AGENTS.md §1, §7, §9)
 turbocal_feeds*.json
+turbocal_local*.ics
 keystore.properties
 *.jks
 *.keystore

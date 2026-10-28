@@ -124,9 +124,21 @@ object Expander {
         val points = LinkedHashMap<String, Point>()
         // DTSTART is always the first instance, whether or not it matches the rule.
         Point.of(seed).let { points[it.key] = it }
+        val seedKey = Point.of(seed).key
         for (rrule in master.getProperties<RRule>(Property.RRULE)) {
-            val dates: DateList = rrule.recur.getDates(seed, periodStart, periodEnd, value, MAX_PER_SERIES)
-            for (d in dates) Point.of(d).let { points[it.key] = it }
+            val recur = rrule.recur
+            if (recur.count > 0) {
+                // RFC 5545: DTSTART is the first of COUNT occurrences even when it
+                // doesn't match the rule; ical4j counts COUNT matches after it. Expand
+                // from the seed (COUNT bounds the work) and drop the extra match.
+                val from = if (value == Value.DATE) Date(seed) else DateTime(seed.time)
+                val matches = recur.getDates(seed, from, periodEnd, value, MAX_PER_SERIES).map { Point.of(it) }.toMutableList()
+                if (matches.none { it.key == seedKey } && matches.size >= recur.count) matches.removeAt(recur.count - 1)
+                for (p in matches) points[p.key] = p
+            } else {
+                val dates: DateList = recur.getDates(seed, periodStart, periodEnd, value, MAX_PER_SERIES)
+                for (d in dates) Point.of(d).let { points[it.key] = it }
+            }
         }
         for (rdate in master.getProperties<RDate>(Property.RDATE)) {
             for (d in rdate.dates ?: continue) Point.of(d).let { points[it.key] = it }

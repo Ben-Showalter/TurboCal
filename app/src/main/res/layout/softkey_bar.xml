@@ -4,7 +4,7 @@
     android:id="@+id/softkey_bar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/surface_header"
+    android:background="?attr/tcSurfaceHeader"
     android:focusable="false"
     android:orientation="horizontal"
     android:paddingStart="@dimen/gutter"
@@ -19,7 +19,7 @@
         android:id="@+id/softkey_center"
         style="@style/Softkey"
         android:gravity="center"
-        android:textColor="@color/text_primary" />
+        android:textColor="?attr/tcTextPrimary" />
 
     <TextView
         android:id="@+id/softkey_right"

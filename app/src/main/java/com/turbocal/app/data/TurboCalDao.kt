@@ -74,4 +74,30 @@ abstract class TurboCalDao {
             "e.kind, e.startKey, e.endKey FROM events e INNER JOIN feeds f ON f.id = e.feedId WHERE e.id = :id",
     )
     abstract suspend fun event(id: Long): EventWithFeed?
+
+    @Query("SELECT e.id, e.feedId, e.uid, e.recurrenceKey, f.source FROM events e INNER JOIN feeds f ON f.id = e.feedId WHERE e.id = :id")
+    abstract suspend fun eventRef(id: Long): EventRef?
+
+    // --- "On this phone" calendar ---
+
+    @Query("SELECT * FROM feeds WHERE source = 1 ORDER BY id LIMIT 1")
+    abstract suspend fun localFeed(): FeedEntity?
+
+    @Query("SELECT * FROM local_events WHERE feedId = :feedId ORDER BY start")
+    abstract suspend fun localEvents(feedId: Long): List<LocalEventEntity>
+
+    @Query("SELECT * FROM local_events WHERE uid = :uid")
+    abstract suspend fun localEvent(uid: String): LocalEventEntity?
+
+    @Query("SELECT COUNT(*) FROM local_events WHERE feedId = :feedId")
+    abstract fun localEventCount(feedId: Long): Flow<Int>
+
+    @Insert
+    abstract suspend fun insertLocalEvent(e: LocalEventEntity): Long
+
+    @Update
+    abstract suspend fun updateLocalEvent(e: LocalEventEntity)
+
+    @Query("DELETE FROM local_events WHERE uid = :uid")
+    abstract suspend fun deleteLocalEvent(uid: String)
 }

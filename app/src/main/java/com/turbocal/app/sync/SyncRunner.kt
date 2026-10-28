@@ -25,6 +25,7 @@ class SyncRunner(
     private val dao: TurboCalDao,
     private val fetcher: FeedFetcher,
     private val prefs: Prefs,
+    private val local: LocalCalendarRunner = LocalCalendarRunner(dao),
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -35,9 +36,10 @@ class SyncRunner(
         val window = ExpansionWindow.around(LocalDate.now(zone), zone)
         var allOk = true
         for (feed in feeds) {
-            if (!syncOne(feed, window)) allOk = false
+            // The phone calendar has nothing to fetch; re-expanding moves its window on.
+            if (feed.isLocal) local.reexpand(feed.id) else if (!syncOne(feed, window)) allOk = false
         }
-        if (onlyFeedId == null && allOk && feeds.isNotEmpty()) prefs.lastCleanSyncAt = clock()
+        if (onlyFeedId == null && allOk && feeds.any { !it.isLocal }) prefs.lastCleanSyncAt = clock()
     }
 
     private suspend fun syncOne(feed: FeedEntity, window: ExpansionWindow): Boolean {

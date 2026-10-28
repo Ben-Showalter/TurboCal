@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Colour roles. Layouts and drawables use ?attr/<role>; each theme fills them in. -->
+<resources>
+    <attr name="tcBackground" format="color" />
+    <attr name="tcSurface" format="color" />
+    <attr name="tcSurfaceHeader" format="color" />
+    <attr name="tcTextPrimary" format="color" />
+    <attr name="tcTextSecondary" format="color" />
+    <!-- Bars, fills, the focus outline. -->
+    <attr name="tcAccent" format="color" />
+    <!-- Accent-coloured text (soft keys, day headers); darker than tcAccent in the light theme. -->
+    <attr name="tcAccentText" format="color" />
+    <!-- Text drawn on a tcAccent fill. -->
+    <attr name="tcOnAccent" format="color" />
+    <attr name="tcFocusFill" format="color" />
+    <attr name="tcError" format="color" />
+    <attr name="tcDivider" format="color" />
+    <attr name="tcGridLine" format="color" />
+    <attr name="tcOutOfMonth" format="color" />
+</resources>

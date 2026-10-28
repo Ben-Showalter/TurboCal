@@ -146,6 +146,16 @@ class ExpanderTest {
         assertFalse(t.occursOn(LocalDate.of(2026, 11, 14), ny))
     }
 
+    @Test fun `COUNT includes a DTSTART that doesn't match the rule`() {
+        val got = Fixtures.read("count_offrule.ics").groupBy({ it.uid }, { it.time.startInstant(ny) })
+        // Sun 25 (DTSTART) + Mon 26, Wed 28, Mon Nov 2 = 4, not 5.
+        assertEquals(
+            listOf("2026-10-25T14:00:00Z", "2026-10-26T14:00:00Z", "2026-10-28T14:00:00Z", "2026-11-02T14:00:00Z").map(Instant::parse),
+            got["offrule@test"],
+        )
+        assertEquals(4, got["onrule@test"]!!.size)
+    }
+
     @Test fun `window keeps 60 days back and 365 forward`() {
         val w = ExpansionWindow.around(Fixtures.TODAY, ny)
         assertEquals(LocalDate.of(2026, 8, 28), w.from)

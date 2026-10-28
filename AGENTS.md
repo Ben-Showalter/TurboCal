@@ -1,8 +1,8 @@
 # AGENTS.md — instructions for AI agents working on TurboCal
 
-TurboCal is a **read-only calendar for keypad flip phones**. It subscribes to iCalendar (`.ics`)
-feed URLs, stores the parsed events in a local database, and shows them in Agenda, Day and Month
-views that work with the keypad alone.
+TurboCal is a **calendar for keypad flip phones**. It subscribes to iCalendar (`.ics`) feed
+URLs (read-only), has one editable **"On this phone"** calendar, stores everything in a local
+database, and shows it in Month, Week, Day and Agenda views that work with the keypad alone.
 
 - Package: `com.turbocal.app` · Kotlin · Android Views · Gradle (Kotlin DSL)
 - Reference device: **Kyocera DuraXV Extreme E4810**. It has no touchscreen, no Google account
@@ -34,25 +34,29 @@ When you learn a new device quirk while working here, add it to the guide as wel
 ## 1. The rules that matter most
 
 1. **Never hand-roll iCalendar or RRULE parsing.** Parsing, recurrence expansion, time-zone
-   resolution and VTIMEZONE handling all come from **ical4j**. If you are splitting lines on
+   resolution and VTIMEZONE handling all come from **ical4j**. The phone calendar too: its
+   events are built as ical4j `VEvent`s (`core/local/LocalCalendar`) and expanded by the same
+   `Expander`. If you are splitting lines on
    `:`, unfolding lines yourself, or writing a `when (freq)` over `DAILY`/`WEEKLY`, you have taken
    a wrong turn. Our code only maps ical4j's output into database rows.
-2. **The UI reads only from the Room database.** No screen ever fetches the network or parses
+2. **Subscribed feeds are read-only; only "On this phone" is writable** (owner decision, §11).
+   Never add editing, RSVP or write-back to a feed.
+3. **The UI reads only from the Room database.** No screen ever fetches the network or parses
    ICS. Sync writes to the database; screens observe it. Offline is the normal case.
-3. **Feed URLs are secrets.** A Google "secret address" URL *is* the password to that calendar.
+4. **Feed URLs are secrets.** A Google "secret address" URL *is* the password to that calendar.
    - Never hardcode one anywhere: source, tests, fixtures, README or commit messages.
    - Never log one in full. Log `FeedUrl.redacted()` (scheme + host + `…`) or the feed's
      database id.
    - Store them only in app-private storage (Room). Set `android:allowBackup="false"`, because
      `adb backup` would otherwise export them.
    - Test fixtures use `https://example.invalid/...` only.
-4. **A failed fetch never destroys data.** Keep the last good events for that feed and record
+5. **A failed fetch never destroys data.** Keep the last good events for that feed and record
    the error in the feed's status. Replace a feed's events only after a full, successful parse,
    in a single database transaction.
-5. **No Google, Play or Firebase anything.** No `com.google.android.gms.*`, no Firebase, no Play
+6. **No Google, Play or Firebase anything.** No `com.google.android.gms.*`, no Firebase, no Play
    Core (that includes Play in-app updates; see §9). AndroidX libraries (Room, WorkManager) are
    fine: they do not need Play services.
-6. **No touch, ever.** Every screen and dialog must be fully usable with the keypad (see guide §1–2).
+7. **No touch, ever.** Every screen and dialog must be fully usable with the keypad (see guide §1–2).
 
 ## 2. Platform settings
 
@@ -95,16 +99,18 @@ core/                      PURE KOTLIN/JVM — no android.* (it can't compile ag
   feeds/                   FeedUrl (normalise, redact), FeedImport (JSON format + merge plan), FeedColors
   sync/                    HttpTransport + UrlConnectionTransport, FeedFetcher (ETag/304/errors), ManualSyncThrottle
   update/                  ReleaseCheck (GitHub releases/latest, asset pick), VersionCompare
-  display/                 AgendaBuilder, DayBuilder, MonthGrid, Formats — every string a screen shows
+  local/                   LocalCalendar (phone calendar ↔ ical4j: expand, export, import), RepeatChoice
+  display/                 AgendaBuilder, WeekBuilder, DayBuilder, MonthGrid, Formats — every string a screen shows
   src/test/resources/ics/  the fixture .ics files (§6)
 app/                       Android: storage, background work, screens
   TurboCalApp, AppGraph    application + hand-written wiring
   data/                    Room entities/DAO/database, Prefs, CalendarRepository
-  sync/                    SyncRunner (fetch → store), SyncWorker, SyncScheduler, SyncState
+  sync/                    SyncRunner (fetch → store), LocalCalendarRunner (phone calendar), SyncWorker, SyncScheduler, SyncState
   update/                  UpdateManager (download, verify, install), UpdateStatus
   feeds/                   FeedFileImporter (finds turbocal_feeds.json)
-  ui/base/                 FlipBaseActivity, KeyMap, SystemBars, CalendarActivity, RowAdapter
-  ui/agenda|day|month|detail|settings|feededit|update/
+  ui/LaunchActivity        launcher trampoline: opens the last-used view
+  ui/base/                 FlipBaseActivity (keys, theme), KeyMap, SystemBars, CalendarActivity, RowAdapter
+  ui/month|week|day|agenda|detail|eventedit|settings|feededit|update/
 ```
 
 - `-Pturbocal.jvmOnly=true` drops `:app` from the build, so `:core` needs no Google Maven or
@@ -164,8 +170,17 @@ named compatibility quirks below.
 
 ### Storage model (the contract between sync and UI)
 
-- `feeds`: id, name, url (secret), color, enabled, etag, lastModified, lastParsedAt,
-  lastSuccessAt, lastAttemptAt, lastError (plain-language text, never containing the URL).
+- `feeds`: id, name, url (secret; `""` for the phone calendar), color, enabled, etag,
+  lastModified, lastParsedAt, lastSuccessAt, lastAttemptAt, lastError (plain-language text,
+  never containing the URL), `source` (0 = ICS link, 1 = "On this phone").
+- `local_events` (phone calendar, what the user typed): uid, title, location, description,
+  allDay, `start`/`end` (ISO local date-times; **floating**; all-day end exclusive), `rrule`
+  (any RRULE ical4j accepts; the editor offers None/Daily/Weekly/Monthly/Yearly and keeps
+  others as "Custom"), `exdates`. After every change `LocalCalendarRunner.reexpand` rebuilds
+  that feed's `events` rows; sync re-expands it daily to move the window.
+- **Schema changes need a hand-written `Migration`** (see `MIGRATION_1_2`) whose SQL matches
+  Room's generated SQL exactly, plus a `MigrationTest`. Never use destructive migration:
+  phone-calendar events exist nowhere else.
 - `events`: feedId (cascade delete), uid, recurrenceKey, title, location, description, `kind`
   (all-day / timed / floating), `startKey`, `endKey`.
 - **Keys** (`EventTime.startKey/endKey`) are epoch millis. A timed key is the real instant. An
@@ -206,6 +221,8 @@ named compatibility quirks below.
 | `SyncRunner` / DAO | A Robolectric test with an in-memory Room database (see `SyncRunnerTest`) |
 | Keys, focus or a new screen | A Robolectric key test (focus never `null`, never stuck) and an entry in the key-only traversal test |
 | Updater | `VersionCompare` tests and an asset-picking test against a canned `releases/latest` JSON |
+| `:core` `local/` | A `LocalCalendarTest` case (expansion, EXDATE, export → import round trip) |
+| Room schema | A migration step + `MigrationTest` |
 
 **The required fixture set** (one small file each, with expected instances written out in the test):
 
@@ -264,10 +281,30 @@ feeds**; typing is the fallback. This follows the guide's rule: never make the u
 
 ## 8. Screens and keys
 
-Screens: **Agenda** (default; opens on today, grouped by day header), **Day** (all-day events at
-the top), **Month** (grid, dots on days with events, week starts on the locale's first day),
-**Event detail** (read-only), **Settings** (feeds, sync interval, Sync now, per-feed status,
-Import, Software update), **Feed edit**, **Software update**.
+Screens:
+- Four interchangeable calendar views, cycled with the View key: **Month** (default on first
+  launch) → **Week** → **Day** → **Agenda**.
+  - Month: a grid of bordered blocks, one full-width colour stripe per event stacked in each
+    block, "+N" when they don't fit. Under it, the focused day's events, one line each, then
+    "+N more – OK opens the day".
+  - Week: 7 days, every day with a header, empty days included; the week starts on the
+    locale's first day.
+  - Day: all-day events at the top.
+  - Agenda: days with events, opening on today.
+- **Event detail**: read-only for feeds. For phone events: Edit / Delete this one / Delete.
+- **Event edit** (phone calendar): keypad steppers for dates, times and repeat.
+- **Settings** is a menu of three pages, each its own screen:
+  - **Sync**: Sync now, interval.
+  - **Calendars**: import feeds, add a link, phone calendar import/export, every calendar with
+    its status.
+  - **App**: theme, show disabled calendars, software update, key help.
+- **Feed edit**, **Software update**.
+
+Navigation rules (owner decisions, §11):
+- **Back/Clear on any of the four calendar views exits the app.** Views switch with `jump()`,
+  and the launcher and Detail→Day clear the task, so a view is always alone on the back stack.
+- `LaunchActivity` reopens the last view (`Prefs.lastView`) on today. Detail, Settings pages
+  and editors go back normally.
 
 One framework `Activity` per screen, each extending `FlipBaseActivity` (Agenda/Day/Month extend
 `CalendarActivity`). **Logic and every displayed string come from `:core` `display/`**
@@ -280,13 +317,13 @@ disabled items, so the D-pad skips them. Empty states are a selectable "No event
 
 | Key | Everywhere | Notes |
 |---|---|---|
-| **Left soft key** / `7` | **View**: Agenda → Day → Month → Agenda | the screen's primary action (guide §1) |
-| **Right soft key** / `9` / `MENU` | **Options** menu: Sync now, Today, Settings, Show/hide disabled, Software update | `AlertDialog.setItems` |
+| **Left soft key** / `7` | **View**: Month → Week → Day → Agenda → Month | the screen's primary action (guide §1) |
+| **Right soft key** / `9` / `MENU` | **Options** menu: New event, Sync now, Today, Go to <view>, Settings, Show/hide disabled, Software update, Key help | `AlertDialog.setItems` |
 | OK (`DPAD_CENTER` or `ENTER`) | open the focused item | Month: open selected day |
-| Back / Clear | back; from a top-level view, exit | normal back stack |
+| Back / Clear | calendar views: **exit** (next launch reopens that view); elsewhere: back | text fields: Clear deletes a character |
 | D-pad up/down | move focus | no wrap at the ends |
-| D-pad left/right | Agenda/Day: previous/next day · Month: move the selected day | skip while an `EditText` has focus |
-| `1` / `3` | previous / next day (Agenda, Day) or month (Month) | |
+| D-pad left/right | Week/Day/Agenda: previous/next day · Month: move the selected day · editor steppers: change value | skip while an `EditText` has focus |
+| `1` / `3` | previous / next day (Day, Agenda), week (Week) or month (Month); editor: bigger step | |
 | `5` | jump to today | |
 | `0` | sync now (throttled) | |
 | `*` (also `NUMPAD_MULTIPLY`) | Settings | |
@@ -367,10 +404,16 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
 
 ## 10. Look and feel
 
-- Dark theme. Background `#000000`, surface `#121212`, text `#FFFFFF` / secondary `#B3B3B3`,
-  **teal accent `#4DB6AC`** (focus bar, today marker, softkey labels). Owner's other apps use
-  purple and orange; never reuse those as accents.
-- Use named color roles in `colors.xml`, never a raw hex in a layout. Contrast ≥ 7:1 for body
+- **Two themes**, picked in Settings > App > Theme (Dark default; no "follow system": Android 9
+  has none). Owner's other apps use purple and orange; never reuse those as accents.
+  - Dark: background `#000000`, surface `#121212`, text `#FFFFFF` / `#B3B3B3`, teal `#4DB6AC`.
+  - Light: background `#FFFFFF`, surface `#F2F2F2`, text `#000000` / `#424242`, teal `#00796B`
+    for bars and fills, `#00574B` for teal text.
+- Colours are theme attributes (`res/values/attrs.xml`: `tcBackground`, `tcAccent`, …).
+  Layouts and drawables use `?attr/tc…`; code uses `FlipBaseActivity.themeColor(R.attr.tc…)`.
+  Never a raw hex or `@color/` in a layout, and never `R.color` in code.
+  `FlipBaseActivity` applies the theme before `super.onCreate` and recreates on resume after a
+  change. Contrast ≥ 7:1 for body
   text, ≥ 4.5:1 for metadata (guide §4).
 - Type: body 16 sp, headers 18 sp, labels 14 sp, metadata ≥ 11 sp. One line per label,
   ellipsized; rows use `minHeight`. Calendar color shows as a 4 dp bar on the row's leading edge.
@@ -379,22 +422,29 @@ published by hand**: there is **no CI release workflow**. Don't add one unless a
 
 ## 11. Conventions decided here
 
-- **Soft keys follow the guide, not the original chat brief.** The brief said "left = Back/menu,
+- **Soft keys follow the guide, not the original chat brief** (owner confirmed). The brief said "left = Back/menu,
   right = view switcher". The guide says left = primary action and right = Options, with Back on
   the Back/Clear key. TurboCal therefore uses **Left = View switcher, Right = Options**, with
   `7`/`9` as aliases. Change this only on the owner's explicit instruction, and update §8 and the
   README together.
-- Read-only means read-only: no event creation, editing, RSVP, CalDAV or account sign-in. Ask
-  before adding anything that writes to a calendar.
+- **Back exits from every calendar view** (owner, round 2), instead of the guide's "a sideways
+  screen goes back to a parent". The launcher reopens the view you left.
+- **One writable calendar, "On this phone"** (owner, round 2). Subscribed feeds stay read-only:
+  no editing, RSVP, CalDAV or account sign-in. Timed phone events are floating (they follow the
+  phone's clock). Editing a repeating event edits the whole series; "Delete this one" adds an
+  EXDATE. Because `allowBackup=false`, Settings > Calendars has Export/Import of
+  `turbocal_local.ics`, and the README tells the user to export before reinstalling.
 - No outer-display (sub-LCD) cards and no notifications/reminders in v1. Ask first: a sub-LCD
   card covers the phone's clock (guide checklist).
 - No search box over events in v1.
 
 ## 12. Build stages (do them in order; each ends green)
 
-Status: stages 1–3 are written. `:core` tests pass on the JVM. `:app` has been type-checked but
-not yet built with AGP or run; the first Android Studio build and stage 4 are next. The
-key-only traversal test (§6) has not been written yet; the stage 4 device pass covers it by hand.
+Status: stages 1–4 done (ICS feeds confirmed working on the E4810). Round 2 is written: themes,
+four views, the month grid redesign, Settings pages and the phone calendar. `:core` tests pass on
+the JVM; `:app` is type-checked but its Robolectric tests (`SyncRunnerTest`, `MigrationTest`,
+`LocalCalendarRunnerTest`) have only run where the Android SDK is available. The key-only
+traversal test (§6) is still to be written.
 
 
 1. **Project + data + parser.** Gradle setup and `.gitignore`, ical4j on Android (§4),

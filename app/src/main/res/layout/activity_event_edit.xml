@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phone-calendar event editor, keypad only. Text fields use the system T9 (guide §3a);
+     the stepper rows change with LEFT/RIGHT (and 1/3), Save/Delete/Cancel are D-pad rows. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/tcBackground"
+    android:orientation="vertical">
+
+    <include layout="@layout/title_bar" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:descendantFocusability="afterDescendants"
+            android:orientation="vertical"
+            android:padding="@dimen/gutter">
+
+            <EditText
+                android:id="@+id/title_field"
+                style="@style/EditField"
+                android:hint="@string/event_title_hint"
+                android:inputType="textCapSentences" />
+
+            <TextView android:id="@+id/all_day" style="@style/StepperRow" />
+            <TextView android:id="@+id/start_date" style="@style/StepperRow" />
+            <TextView android:id="@+id/start_time" style="@style/StepperRow" />
+            <TextView android:id="@+id/end_date" style="@style/StepperRow" />
+            <TextView android:id="@+id/end_time" style="@style/StepperRow" />
+            <TextView android:id="@+id/repeat" style="@style/StepperRow" />
+
+            <EditText
+                android:id="@+id/location_field"
+                style="@style/EditField"
+                android:hint="@string/event_location_hint"
+                android:inputType="textCapSentences" />
+
+            <EditText
+                android:id="@+id/notes_field"
+                style="@style/EditField"
+                android:hint="@string/event_notes_hint"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLines="4" />
+
+            <TextView
+                android:id="@+id/error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/tcError"
+                android:textSize="@dimen/text_meta"
+                android:visibility="gone" />
+
+            <Button android:id="@+id/save" style="@style/RowButton" android:text="@string/feed_save" />
+            <Button android:id="@+id/delete" style="@style/RowButton" android:text="@string/delete" />
+            <Button android:id="@+id/cancel" style="@style/RowButton" android:text="@string/feed_cancel" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Which keys change the focused row. -->
+    <TextView
+        android:id="@+id/hint"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:background="?attr/tcSurface"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="@dimen/gutter"
+        android:paddingEnd="@dimen/gutter"
+        android:textColor="?attr/tcTextSecondary"
+        android:textSize="11sp" />
+
+    <include layout="@layout/softkey_bar" />
+</LinearLayout>

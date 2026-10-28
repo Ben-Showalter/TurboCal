@@ -1,23 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark, high contrast, no animations (AGENTS.md §10). Framework Material theme:
-         the app uses plain Activities, so no AppCompat is needed. -->
-    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:colorBackground">@color/background</item>
-        <item name="android:colorPrimary">@color/surface_header</item>
-        <item name="android:colorPrimaryDark">@color/background</item>
-        <item name="android:colorAccent">@color/accent</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
+    <!-- Dark (default) and Light, picked in Settings > App > Theme. Framework Material
+         themes: the app uses plain Activities, so no AppCompat. No animations. -->
+    <style name="AppTheme" parent="AppTheme.Dark" />
+
+    <style name="AppTheme.Dark" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="tcBackground">@color/dark_background</item>
+        <item name="tcSurface">@color/dark_surface</item>
+        <item name="tcSurfaceHeader">@color/dark_surface_header</item>
+        <item name="tcTextPrimary">@color/dark_text_primary</item>
+        <item name="tcTextSecondary">@color/dark_text_secondary</item>
+        <item name="tcAccent">@color/dark_accent</item>
+        <item name="tcAccentText">@color/dark_accent</item>
+        <item name="tcOnAccent">@color/dark_on_accent</item>
+        <item name="tcFocusFill">@color/dark_focus_fill</item>
+        <item name="tcError">@color/dark_error</item>
+        <item name="tcDivider">@color/dark_divider</item>
+        <item name="tcGridLine">@color/dark_grid_line</item>
+        <item name="tcOutOfMonth">@color/dark_out_of_month</item>
+        <item name="android:windowBackground">@color/dark_background</item>
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="android:colorPrimary">@color/dark_surface_header</item>
+        <item name="android:colorPrimaryDark">@color/dark_background</item>
+        <item name="android:colorAccent">@color/dark_accent</item>
+        <item name="android:textColorPrimary">@color/dark_text_primary</item>
+        <item name="android:textColorSecondary">@color/dark_text_secondary</item>
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowContentTransitions">false</item>
-        <item name="android:alertDialogTheme">@style/AppDialog</item>
+        <item name="android:alertDialogTheme">@style/AppDialog.Dark</item>
     </style>
 
-    <style name="AppDialog" parent="@android:style/Theme.Material.Dialog.Alert">
-        <item name="android:colorAccent">@color/accent</item>
+    <style name="AppTheme.Light" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="tcBackground">@color/light_background</item>
+        <item name="tcSurface">@color/light_surface</item>
+        <item name="tcSurfaceHeader">@color/light_surface_header</item>
+        <item name="tcTextPrimary">@color/light_text_primary</item>
+        <item name="tcTextSecondary">@color/light_text_secondary</item>
+        <item name="tcAccent">@color/light_accent</item>
+        <item name="tcAccentText">@color/light_accent_text</item>
+        <item name="tcOnAccent">@color/light_on_accent</item>
+        <item name="tcFocusFill">@color/light_focus_fill</item>
+        <item name="tcError">@color/light_error</item>
+        <item name="tcDivider">@color/light_divider</item>
+        <item name="tcGridLine">@color/light_grid_line</item>
+        <item name="tcOutOfMonth">@color/light_out_of_month</item>
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="android:colorPrimary">@color/light_surface_header</item>
+        <item name="android:colorPrimaryDark">@color/light_surface_header</item>
+        <item name="android:colorAccent">@color/light_accent</item>
+        <item name="android:textColorPrimary">@color/light_text_primary</item>
+        <item name="android:textColorSecondary">@color/light_text_secondary</item>
         <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowContentTransitions">false</item>
+        <item name="android:alertDialogTheme">@style/AppDialog.Light</item>
+    </style>
+
+    <style name="AppDialog.Dark" parent="@android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/dark_accent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="AppDialog.Light" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/light_accent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <!-- The launcher trampoline shows nothing. -->
+    <style name="AppTheme.Launch" parent="@android:style/Theme.NoDisplay" />
+
+    <!-- Shared field styles for the editors. -->
+    <style name="EditField">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:background">@drawable/focus_selector</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:minHeight">@dimen/row_min_height</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">@dimen/gutter</item>
+        <item name="android:textColor">?attr/tcTextPrimary</item>
+        <item name="android:textColorHint">?attr/tcTextSecondary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="StepperRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:background">@drawable/focus_selector</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:minHeight">@dimen/row_min_height</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">@dimen/gutter</item>
+        <item name="android:textColor">?attr/tcTextPrimary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="RowButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:background">@drawable/focus_selector</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:minHeight">@dimen/row_min_height</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">?attr/tcTextPrimary</item>
         <item name="android:textSize">@dimen/text_body</item>
     </style>
 
@@ -28,7 +125,7 @@
         <item name="android:focusable">false</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textColor">@color/accent</item>
+        <item name="android:textColor">?attr/tcAccentText</item>
         <item name="android:textSize">@dimen/text_softkey</item>
         <item name="android:paddingTop">2dp</item>
         <item name="android:paddingBottom">2dp</item>

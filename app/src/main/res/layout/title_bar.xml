@@ -3,7 +3,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/surface_header"
+    android:background="?attr/tcSurfaceHeader"
     android:focusable="false"
     android:orientation="vertical"
     android:paddingStart="@dimen/gutter"
@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/tcTextPrimary"
         android:textSize="@dimen/text_header" />
 
     <TextView
@@ -24,6 +24,6 @@
         android:layout_height="16dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/tcTextSecondary"
         android:textSize="11sp" />
 </LinearLayout>

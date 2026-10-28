@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ListView
 import com.turbocal.app.R
+import com.turbocal.app.data.CalendarView
 import com.turbocal.app.ui.base.CalendarActivity
 import com.turbocal.app.ui.base.RowAdapter
 import com.turbocal.app.ui.day.DayActivity
@@ -24,7 +25,7 @@ class AgendaActivity : CalendarActivity() {
     override val currentDate: LocalDate
         get() = adapter.rows.getOrNull(list.selectedItemPosition)?.let { AgendaBuilder.dayOf(it) } ?: target
 
-    override fun nextView() = DayActivity::class.java
+    override val view = CalendarView.AGENDA
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,6 @@ class AgendaActivity : CalendarActivity() {
                 }
             }
         }
-        graph.let { g -> scope.launch { g.updates.checkForUpdate(force = false) } }
     }
 
     private fun currentDateOr(fallback: LocalDate) = runCatching { currentDate }.getOrDefault(fallback)

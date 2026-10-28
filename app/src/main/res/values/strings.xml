@@ -11,6 +11,7 @@
     <string name="key_day">Day</string>
     <string name="key_save">Save</string>
     <string name="key_keys">Keys</string>
+    <string name="key_edit">Edit</string>
 
     <string name="title_agenda">Agenda</string>
     <string name="title_settings">Settings</string>
@@ -19,6 +20,8 @@
     <string name="title_edit_feed">Edit calendar</string>
 
     <!-- Options menu on the calendar views. The key shortcut follows in brackets. -->
+    <string name="menu_new_event">New event (on this phone)</string>
+    <string name="menu_go_to">Go to %1$s</string>
     <string name="menu_sync">Sync now (0)</string>
     <string name="menu_today">Go to today (5)</string>
     <string name="menu_settings">Settings (*)</string>
@@ -29,11 +32,13 @@
 
     <string name="status_syncing">Syncing…</string>
     <string name="status_no_feeds">No calendars - press * to add one</string>
+    <string name="status_phone_only">Phone calendar only</string>
     <string name="status_error">Sync problem - see Settings</string>
     <string name="toast_showing_disabled">Showing disabled calendars</string>
     <string name="toast_hiding_disabled">Hiding disabled calendars</string>
     <string name="toast_sync_started">Syncing…</string>
     <string name="toast_offline">No connection - will sync when online</string>
+    <string name="toast_no_links">No calendar links to sync - add one in Settings (*)</string>
     <string name="toast_no_feeds">No calendars yet - press * for Settings</string>
 
     <string name="feed_name">Name</string>
@@ -56,6 +61,26 @@
     <string name="settings_header_sync">Sync</string>
     <string name="settings_header_calendars">Calendars</string>
     <string name="settings_header_app">App</string>
+    <string name="settings_header_links">Calendar links</string>
+    <string name="settings_header_phone">On this phone</string>
+    <string name="settings_header_your_calendars">Your calendars</string>
+    <string name="settings_local_import">Import .ics into phone calendar</string>
+    <string name="settings_local_export">Export phone calendar</string>
+    <string name="settings_local_file">turbocal_local.ics</string>
+    <string name="settings_theme">Theme (OK to change)</string>
+    <string name="settings_app_summary">%1$s theme · v%2$s</string>
+    <plurals name="settings_calendar_count">
+        <item quantity="one">%d calendar</item>
+        <item quantity="other">%d calendars</item>
+    </plurals>
+    <plurals name="settings_error_count">
+        <item quantity="one">%d error</item>
+        <item quantity="other">%d errors</item>
+    </plurals>
+    <plurals name="settings_local_count">
+        <item quantity="one">%d event on this phone</item>
+        <item quantity="other">%d events on this phone</item>
+    </plurals>
     <string name="settings_no_feeds">No calendars yet. Import a file or type a link above.</string>
     <string name="on">On</string>
     <string name="off">Off</string>
@@ -67,6 +92,7 @@
     <string name="feed_menu_delete">Delete</string>
     <string name="feed_delete_title">Delete %1$s?</string>
     <string name="feed_delete_body">Its events are removed from this phone.</string>
+    <string name="feed_delete_local_body">Every event you added on this phone is deleted. Export it first to keep a copy.</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     <string name="keep">Keep</string>
@@ -78,6 +104,39 @@
     <string name="import_deleted">File deleted</string>
     <string name="import_not_deleted">Couldn\'t delete the file - delete it with adb</string>
     <string name="permission_denied">Storage access was not allowed</string>
+
+    <string name="local_import_not_found">No turbocal_local.ics found. Push one with adb to Android/data/com.turbocal.app/files/ or Download/ (see the README).</string>
+    <string name="local_import_done">Added or updated %1$d events (%2$d skipped).</string>
+    <string name="local_import_failed">Couldn\'t read that .ics file.</string>
+    <string name="local_export_done">Saved %1$d events to Android/data/com.turbocal.app/files/turbocal_local.ics. Copy it off the phone with adb pull (see the README).</string>
+    <string name="local_export_failed">Couldn\'t save the file.</string>
+    <string name="month_more">+%1$d more – OK opens the day</string>
+
+    <string name="title_new_event">New event</string>
+    <string name="title_edit_event">Edit event</string>
+    <string name="title_edit_repeats">Edit all repeats</string>
+    <string name="event_title_hint">Title</string>
+    <string name="event_location_hint">Location</string>
+    <string name="event_notes_hint">Notes</string>
+    <string name="event_all_day_on">All day: On</string>
+    <string name="event_all_day_off">All day: Off</string>
+    <string name="event_starts">Starts: %1$s</string>
+    <string name="event_ends">Ends: %1$s</string>
+    <string name="event_at">At: %1$s</string>
+    <string name="event_until">Until: %1$s</string>
+    <string name="event_repeat">Repeat: %1$s</string>
+    <string name="repeat_custom">Custom (kept)</string>
+    <string name="event_end_before_start">The end is before the start.</string>
+    <string name="hint_date">‹ › one day · 1 3 one week</string>
+    <string name="hint_time">‹ › 15 min · 1 3 one hour</string>
+    <string name="hint_repeat">‹ › change</string>
+    <string name="hint_toggle">OK to change</string>
+    <string name="event_menu_edit">Edit</string>
+    <string name="event_menu_delete">Delete</string>
+    <string name="event_menu_delete_one">Delete this one</string>
+    <string name="event_menu_delete_all">Delete all repeats</string>
+    <string name="event_delete_confirm">Delete this event?</string>
+    <string name="event_delete_one_confirm">Delete just this occurrence?</string>
 
     <string name="detail_calendar">Calendar: %1$s</string>
     <string name="detail_location">Where: %1$s</string>
@@ -99,6 +158,6 @@
     <string name="update_badge">Update available: %1$s</string>
     <string name="update_allow_sources">Allow installs: select TurboCal, press OK to turn on, then press Back.</string>
 
-    <string name="keys_help">View (left key or 7): Agenda, Day, Month\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day or month\n5: today\n0: sync now\n*: Settings\n#: show/hide disabled calendars\nBack: back</string>
+    <string name="keys_help">View (left key or 7): Month, Week, Day, Agenda\nOptions (right key or 9)\nOK: open\n1 / 3: previous / next day, week or month\n5: today\n0: sync now\n*: Settings\n#: show/hide disabled calendars\nBack: exit (the app reopens this view)</string>
     <string name="unhandled_key">KEY %1$d</string>
 </resources>

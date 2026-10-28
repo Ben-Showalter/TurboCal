@@ -1,36 +1,96 @@
 # TurboCal
 
-A **read-only calendar for keypad flip phones**. It subscribes to iCalendar (`.ics`) links from
-Google Calendar, Outlook.com, Teamup or any other service, keeps everything in a local database
-so it works offline, and is driven entirely by the keypad. No touchscreen, Google account or
-Play services needed.
+A **calendar for keypad flip phones**. It subscribes to iCalendar (`.ics`) links from Google
+Calendar, Outlook.com, Teamup or any other service (read-only). It also has its own **"On this
+phone"** calendar you can add events to with the keypad. Everything is kept in a local database
+so it works offline, in a dark or light theme. No touchscreen, Google account or Play services
+needed.
 
 - **Reference phone:** Kyocera DuraXV Extreme **E4810** (2.6″, 240×320, D-pad + soft keys).
   Android version: *to be confirmed with `adb shell getprop ro.build.version.release`*.
-- **Status:** pre-release (`0.1.0`), not yet tested on the phone.
+- **Status:** pre-release. ICS feeds tested on the E4810; round 2 (themes, Week view, phone
+  calendar) not yet tested on the phone.
 - **Data sources:** only the `.ics` links you add, plus GitHub Releases for app updates.
 
 Built to the [flip-phone guide](https://github.com/Ben-Showalter/Flip-DumbPhoneGuide). Contributors
 and AI agents: read [AGENTS.md](AGENTS.md) first.
 
+## Views
+
+Four views, switched with the **View** key in this order: **Month → Week → Day → Agenda**.
+The first launch opens Month. After that TurboCal opens the view you left, on today.
+
+- **Month:** a grid of blocks. Each event is a full-width stripe in its calendar's colour,
+  stacked inside the day's block, with "+N" when they don't all fit. Under the grid you see the
+  selected day's events, one per line. If there are too many, the last line says
+  "+N more – OK opens the day".
+- **Week:** the seven days of the week (starting on your locale's first weekday), each with a
+  header, including empty days.
+- **Day:** one day, all-day events first.
+- **Agenda:** every day that has events, opening on today.
+
 ## Keys
 
 | Key | Does |
 |---|---|
-| **Left soft key** (or `7`) | **View**: Agenda → Day → Month → Agenda |
-| **Right soft key** (or `9`, or MENU) | **Options**: Sync now, Today, Settings, show/hide disabled, updates, key help |
+| **Left soft key** (or `7`) | **View**: Month → Week → Day → Agenda → Month |
+| **Right soft key** (or `9`, or MENU) | **Options**: New event, Sync now, Today, Go to a view, Settings, show/hide disabled, updates, key help |
 | OK | Open the selected event or day |
 | D-pad up/down | Move |
-| D-pad left/right | Agenda/Day: previous/next day · Month: move the selected day |
-| `1` / `3` | Previous / next day (Agenda, Day) or month (Month) |
+| D-pad left/right | Month: move the selected day · Week/Day/Agenda: previous/next day |
+| `1` / `3` | Previous / next month (Month), week (Week) or day (Day, Agenda) |
 | `5` | Jump to today |
 | `0` | Sync now |
 | `*` | Settings |
 | `#` | Show / hide disabled calendars |
-| Back / Clear | Back (Day and Month go back to the Agenda) |
+| Back / Clear | On a calendar view: **exit** (it reopens there next time) · elsewhere: back |
 
 In Settings the left soft key is **Sync** and the right one shows this key list. In a text
 field the keys type, and Clear deletes a character.
+
+## Settings
+
+`*` opens a menu of three pages, each its own screen:
+
+- **Sync:** Sync now, and how often to sync in the background.
+- **Calendars:**
+  - import feeds from a file, or add a calendar by typing a link;
+  - import/export the phone calendar;
+  - every calendar with its status. OK on one gives Edit, Turn on/off, Sync, Delete.
+- **App:** Theme (Dark or Light, OK to switch), Show disabled calendars, Software update,
+  Key help.
+
+## The "On this phone" calendar
+
+Options → **New event** adds an event on the selected day. Every field works with the keypad:
+
+| Row | Keys |
+|---|---|
+| Title, Location, Notes | type with the phone's keyboard |
+| All day | OK switches it on/off |
+| Starts / Ends (dates) | left/right: one day · `1`/`3`: one week |
+| At / Until (times) | left/right: 15 minutes · `1`/`3`: one hour |
+| Repeat | left/right: doesn't repeat, every day, week, month, year |
+
+Moving the start moves the end with it. Press **Save** (or the left soft key).
+
+Open a phone event to change it: the left soft key is **Edit**. Options gives **Delete this
+one** (for repeating events) or **Delete**. Editing a repeating event changes every repeat.
+Times follow the phone's clock, so 9:00 stays 9:00 if you change time zone.
+
+**Back it up:** phone events live only in TurboCal. Uninstalling it (for example, to switch
+from a debug build to a release build) deletes them. Before that, use Settings → Calendars →
+**Export phone calendar**, then:
+
+```bash
+adb pull /sdcard/Android/data/com.turbocal.app/files/turbocal_local.ics
+# later, after reinstalling and opening TurboCal once:
+adb push turbocal_local.ics /sdcard/Android/data/com.turbocal.app/files/turbocal_local.ics
+```
+
+Then Settings → Calendars → **Import .ics into phone calendar**. This works with any `.ics`
+file named `turbocal_local.ics` (also from `Download/`). Changed single occurrences in an
+imported file are skipped and counted.
 
 ## Getting your calendar's ICS link
 
@@ -86,26 +146,26 @@ adb push turbocal_feeds.json /sdcard/Android/data/com.turbocal.app/files/turboca
 adb push turbocal_feeds.json /sdcard/Download/turbocal_feeds.json
 ```
 
-On the phone: `*` (Settings) → **Import feeds from file** → OK. If it asks for storage access,
+On the phone: `*` (Settings) → **Calendars** → **Import feeds from file** → OK. If it asks for storage access,
 move to **Allow** and press OK. When it says "Imported N…", leave the focus on **Delete** and
 press OK to remove the file: it contains your private links. `turbocal_feeds*.json` is in
 `.gitignore`; never commit it.
 
 ### Type a link
 
-Settings → **Add calendar by typing a link**. Type the name and link with the phone's keyboard.
+Settings → Calendars → **Add calendar by typing a link**. Type the name and link with the phone's keyboard.
 Move down to the **Color** row and use left/right to change it. **Enabled** toggles with OK.
 Then move to **Save** and press OK.
 
 ## Sync
 
-- Background sync every 30 minutes by default (Settings → *Sync every*: 15 min to 6 h, or manual
-  only). It only runs with a connection, and it sends `ETag`/`If-Modified-Since` so unchanged
+- Background sync every 30 minutes by default (Settings → Sync → *Sync every*: 15 min to 6 h,
+  or manual only). It only runs with a connection, and it sends `ETag`/`If-Modified-Since` so unchanged
   feeds aren't downloaded again.
 - `0` syncs now. Right after a clean sync it answers "Already up to date - try again in about
   N min" instead.
 - Events are expanded from 60 days back to a year ahead. A feed that fails keeps its last good
-  events. Its Settings row shows the error in plain words, e.g. "Error: No connection · last good
+  events. Its row in Settings → Calendars shows the error in plain words, e.g. "Error: No connection · last good
   10:42 AM".
 - Google refreshes its secret ICS link on its own schedule (often every few hours). A change you
   make in Google Calendar can take that long to reach any app that subscribes by link.
@@ -131,7 +191,7 @@ build and test:
 
 ## Updates
 
-The app updates itself from this repo's **GitHub Releases**: Settings → **Software update**
+The app updates itself from this repo's **GitHub Releases**: Settings → App → **Software update**
 (or Options → *Check for updates*). It also checks quietly once a day at launch, and shows
 "Update available" on the Settings row. Nothing downloads or installs until you press OK.
 
@@ -140,8 +200,8 @@ The app updates itself from this repo's **GitHub Releases**: Settings → **Soft
 - The check reads `releases/latest` without signing in, so it only works once the repository
   (or its releases) is public. Until then it says "No releases published yet."
 - An update must be signed with the same key as the installed app. **A debug build can't update
-  to a release build.** To switch: uninstall, `adb install` the release APK, then re-import your
-  feeds file.
+  to a release build.** To switch: export the phone calendar (see above), uninstall,
+  `adb install` the release APK, then re-import your feeds file and the phone calendar.
 
 ### Making a release (manual)
 
@@ -164,10 +224,10 @@ Each release:
 6. On GitHub: *Releases* → *Draft a new release* → pick the tag → attach the APK → write
    plain-language notes (the app shows them) → **Publish**. Don't tick *pre-release*: the app
    ignores pre-releases.
-7. On the phone: Settings → Software update → it should offer the new version.
+7. On the phone: Settings → App → Software update → it should offer the new version.
 
 ## Privacy
 
-Feed links are stored only in TurboCal's private database. They are never logged (logs show only
+Feed links and phone events are stored only in TurboCal's private database. They are never logged (logs show only
 `https://host/…`) and never sent anywhere except to that calendar's own server. App backup is
 off, so `adb backup` can't export them. The update check talks only to GitHub.

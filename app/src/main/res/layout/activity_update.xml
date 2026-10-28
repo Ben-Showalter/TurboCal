@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="?attr/tcBackground"
     android:orientation="vertical">
 
     <include layout="@layout/title_bar" />
@@ -18,7 +18,7 @@
         android:minHeight="@dimen/row_min_height"
         android:stateListAnimator="@null"
         android:textAllCaps="false"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/tcTextPrimary"
         android:textSize="@dimen/text_body" />
 
     <TextView
@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/gutter"
         android:paddingEnd="@dimen/gutter"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/tcTextPrimary"
         android:textSize="@dimen/text_body" />
 
     <ScrollView
@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/gutter"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/tcTextSecondary"
             android:textSize="@dimen/text_label" />
     </ScrollView>
 

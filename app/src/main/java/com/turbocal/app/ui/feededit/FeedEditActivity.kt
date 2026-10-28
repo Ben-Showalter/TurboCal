@@ -20,6 +20,8 @@ import kotlinx.coroutines.launch
  */
 class FeedEditActivity : FlipBaseActivity() {
     private var feedId: Long? = null
+    /** The phone calendar: name, colour and on/off only; it has no link. */
+    private var isLocal = false
     private var color = FeedColors.PALETTE[0]
     private var enabled = true
 
@@ -77,6 +79,11 @@ class FeedEditActivity : FlipBaseActivity() {
         } else {
             scope.launch {
                 val f = graph.repository.feed(id) ?: return@launch finish()
+                isLocal = f.isLocal
+                if (isLocal) {
+                    findViewById<View>(R.id.url_label).visibility = View.GONE
+                    url.visibility = View.GONE
+                }
                 name.setText(f.name)
                 url.setText(f.url)
                 color = f.color
@@ -97,7 +104,7 @@ class FeedEditActivity : FlipBaseActivity() {
     override fun onPrimaryKey() = save()
 
     private fun save() {
-        val normalized = FeedUrl.normalize(url.text.toString())
+        val normalized = if (isLocal) "" else FeedUrl.normalize(url.text.toString())
         if (normalized == null) {
             error.setText(R.string.feed_bad_url)
             error.visibility = View.VISIBLE
@@ -113,7 +120,7 @@ class FeedEditActivity : FlipBaseActivity() {
                 graph.repository.saveFeed(id, label, normalized, color, enabled)
                 id
             }
-            if (enabled) SyncScheduler.syncNow(this@FeedEditActivity, savedId)
+            if (enabled && !isLocal) SyncScheduler.syncNow(this@FeedEditActivity, savedId)
             finish()
         }
     }

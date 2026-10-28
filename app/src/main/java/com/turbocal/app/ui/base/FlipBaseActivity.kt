@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.turbocal.app.R
 import com.turbocal.app.TurboCalApp
+import com.turbocal.app.data.AppTheme
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -57,9 +58,28 @@ abstract class FlipBaseActivity : Activity() {
         if (newFocus is EditText) SystemBars.showNavigation(this) else SystemBars.hideNavigation(this)
     }
 
+    private var appliedTheme: AppTheme? = null
+
+    /** True once onResume has asked for a recreate (theme change); subclasses stop there. */
+    protected var recreating = false
+        private set
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val theme = graph.prefs.theme
+        appliedTheme = theme
+        setTheme(if (theme == AppTheme.LIGHT) R.style.AppTheme_Light else R.style.AppTheme_Dark)
         super.onCreate(savedInstanceState)
         window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener(barFocusListener)
+    }
+
+    /** A colour role (R.attr.tc…) from the current theme. */
+    fun themeColor(attr: Int): Int {
+        val a = obtainStyledAttributes(intArrayOf(attr))
+        try {
+            return a.getColor(0, 0)
+        } finally {
+            a.recycle()
+        }
     }
 
     override fun onDestroy() {
@@ -70,6 +90,12 @@ abstract class FlipBaseActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // The theme changed in Settings while this screen was underneath: repaint.
+        if (appliedTheme != null && appliedTheme != graph.prefs.theme) {
+            recreating = true
+            recreate()
+            return
+        }
         SystemBars.hideNavigation(this)
     }
 

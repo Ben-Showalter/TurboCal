@@ -4,10 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ListView
 import com.turbocal.app.R
+import com.turbocal.app.data.CalendarView
 import com.turbocal.app.ui.base.CalendarActivity
 import com.turbocal.app.ui.base.RowAdapter
 import com.turbocal.app.ui.detail.DetailActivity
-import com.turbocal.app.ui.month.MonthActivity
 import com.turbocal.core.display.DayBuilder
 import com.turbocal.core.display.Row
 import kotlinx.coroutines.Job
@@ -23,7 +23,7 @@ class DayActivity : CalendarActivity() {
 
     override val currentDate get() = day
 
-    override fun nextView() = MonthActivity::class.java
+    override val view = CalendarView.DAY
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,14 +1,19 @@
 package com.turbocal.app.ui.detail
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.ScrollView
 import android.widget.TextView
 import com.turbocal.app.R
+import com.turbocal.app.data.EventRef
+import com.turbocal.app.data.FeedEntity
 import com.turbocal.app.ui.base.CalendarActivity
 import com.turbocal.app.ui.base.FlipBaseActivity
 import com.turbocal.app.ui.day.DayActivity
+import com.turbocal.app.ui.eventedit.EventEditActivity
 import com.turbocal.core.display.DisplayEvent
 import com.turbocal.core.display.Formats
 import kotlinx.coroutines.launch
@@ -19,6 +24,8 @@ import java.util.Locale
 /** Read-only event detail. The left soft key opens that event's day. */
 class DetailActivity : FlipBaseActivity() {
     private var event: DisplayEvent? = null
+    private var ref: EventRef? = null
+    private val isLocal get() = ref?.source == FeedEntity.SOURCE_LOCAL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +37,9 @@ class DetailActivity : FlipBaseActivity() {
         scope.launch {
             val e = graph.repository.event(id)
             event = e
+            ref = graph.repository.eventRef(id)
+            // Phone-calendar events can be changed: left = Edit, right = Options.
+            if (isLocal) setSoftkeys(getString(R.string.key_edit), "", getString(R.string.key_options))
             render(e)
         }
     }
@@ -58,9 +68,50 @@ class DetailActivity : FlipBaseActivity() {
     }
 
     override fun onPrimaryKey() {
+        if (isLocal) {
+            edit()
+            return
+        }
         val e = event ?: return
-        startActivity(CalendarActivity.intentFor(this, DayActivity::class.java, e.time.firstDay(ZoneId.systemDefault())))
+        // A fresh task, so the Day view is alone and Back exits, like every calendar view.
+        startActivity(
+            CalendarActivity.intentFor(this, DayActivity::class.java, e.time.firstDay(ZoneId.systemDefault()))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+        )
+    }
+
+    override fun onOptionsKey() {
+        val r = ref ?: return
+        if (!isLocal) return
+        val repeating = r.recurrenceKey.isNotEmpty()
+        val actions = ArrayList<Pair<String, () -> Unit>>()
+        actions += getString(R.string.event_menu_edit) to { edit() }
+        if (repeating) actions += getString(R.string.event_menu_delete_one) to { confirm(R.string.event_delete_one_confirm) { graph.local.deleteOccurrence(r.uid, r.recurrenceKey) } }
+        actions += getString(if (repeating) R.string.event_menu_delete_all else R.string.event_menu_delete) to {
+            confirm(R.string.event_delete_confirm) { graph.local.delete(r.uid) }
+        }
+        AlertDialog.Builder(this).setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }.show()
+    }
+
+    /** The instance ids change when the calendar is re-expanded, so this screen closes behind the editor. */
+    private fun edit() {
+        val r = ref ?: return
+        startActivity(Intent(this, EventEditActivity::class.java).putExtra(EventEditActivity.EXTRA_UID, r.uid))
         finish()
+    }
+
+    private fun confirm(message: Int, action: suspend () -> Unit) {
+        val dialog = AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                scope.launch {
+                    action()
+                    finish()
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.requestFocus()
     }
 
     companion object {

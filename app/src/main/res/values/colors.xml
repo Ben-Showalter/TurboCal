@@ -1,13 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Named colour roles (AGENTS.md §10). Layouts use these, never raw hex. -->
+<!-- Raw palette for the two themes (AGENTS.md §10). Only themes.xml uses these;
+     layouts and drawables use the ?attr roles in attrs.xml. -->
 <resources>
-    <color name="background">#FF000000</color>
-    <color name="surface">#FF121212</color>
-    <color name="surface_header">#FF1E1E1E</color>
-    <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#FFB3B3B3</color>
-    <color name="accent">#FF4DB6AC</color>
-    <color name="focus_fill">#404DB6AC</color>
-    <color name="error">#FFFF8A80</color>
-    <color name="divider">#FF333333</color>
+    <color name="dark_background">#FF000000</color>
+    <color name="dark_surface">#FF121212</color>
+    <color name="dark_surface_header">#FF1E1E1E</color>
+    <color name="dark_text_primary">#FFFFFFFF</color>
+    <color name="dark_text_secondary">#FFB3B3B3</color>
+    <color name="dark_accent">#FF4DB6AC</color>
+    <color name="dark_on_accent">#FF000000</color>
+    <color name="dark_focus_fill">#404DB6AC</color>
+    <color name="dark_error">#FFFF8A80</color>
+    <color name="dark_divider">#FF333333</color>
+    <color name="dark_grid_line">#FF3A3A3A</color>
+    <color name="dark_out_of_month">#FF0B0B0B</color>
+
+    <color name="light_background">#FFFFFFFF</color>
+    <color name="light_surface">#FFF2F2F2</color>
+    <color name="light_surface_header">#FFE0E0E0</color>
+    <color name="light_text_primary">#FF000000</color>
+    <color name="light_text_secondary">#FF424242</color>
+    <color name="light_accent">#FF00796B</color>
+    <color name="light_accent_text">#FF00574B</color>
+    <color name="light_on_accent">#FFFFFFFF</color>
+    <color name="light_focus_fill">#3300796B</color>
+    <color name="light_error">#FFB71C1C</color>
+    <color name="light_divider">#FFCCCCCC</color>
+    <color name="light_grid_line">#FFBDBDBD</color>
+    <color name="light_out_of_month">#FFEEEEEE</color>
 </resources>

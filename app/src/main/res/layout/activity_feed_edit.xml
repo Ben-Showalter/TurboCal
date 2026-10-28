@@ -4,7 +4,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="?attr/tcBackground"
     android:orientation="vertical">
 
     <include layout="@layout/title_bar" />
@@ -26,7 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/feed_name"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/tcTextSecondary"
                 android:textSize="@dimen/text_meta" />
 
             <EditText
@@ -39,15 +39,16 @@
                 android:minHeight="@dimen/row_min_height"
                 android:paddingStart="10dp"
                 android:paddingEnd="@dimen/gutter"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/tcTextPrimary"
                 android:textSize="@dimen/text_body" />
 
             <TextView
+                android:id="@+id/url_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/feed_url"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/tcTextSecondary"
                 android:textSize="@dimen/text_meta" />
 
             <EditText
@@ -60,14 +61,14 @@
                 android:minHeight="@dimen/row_min_height"
                 android:paddingStart="10dp"
                 android:paddingEnd="@dimen/gutter"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/tcTextPrimary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
                 android:id="@+id/error"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/error"
+                android:textColor="?attr/tcError"
                 android:textSize="@dimen/text_meta"
                 android:visibility="gone" />
 
@@ -96,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/tcTextPrimary"
                     android:textSize="@dimen/text_body" />
             </LinearLayout>
 
@@ -111,7 +112,7 @@
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/row_min_height"
                 android:paddingStart="10dp"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/tcTextPrimary"
                 android:textSize="@dimen/text_body" />
 
             <Button
@@ -126,7 +127,7 @@
                 android:stateListAnimator="@null"
                 android:text="@string/feed_save"
                 android:textAllCaps="false"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/tcTextPrimary"
                 android:textSize="@dimen/text_body" />
 
             <Button
@@ -141,7 +142,7 @@
                 android:stateListAnimator="@null"
                 android:text="@string/feed_cancel"
                 android:textAllCaps="false"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/tcTextPrimary"
                 android:textSize="@dimen/text_body" />
         </LinearLayout>
     </ScrollView>
