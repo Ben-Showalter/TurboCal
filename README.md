@@ -21,9 +21,10 @@ Four views, switched with the **View** key in this order: **Month → Week → D
 The first launch opens Month. After that TurboCal opens the view you left, on today.
 
 - **Month:** a grid of blocks. Each event is a full-width stripe in its calendar's colour,
-  stacked inside the day's block, with "+N" when they don't all fit. Under the grid you see the
-  selected day's events, one per line. If there are too many, the last line says
-  "+N more – OK opens the day".
+  stacked inside the day's block, with "+N" when they don't all fit. Under the grid you see
+  every event of the selected day, one per line. On a busy day the grid gets shorter to
+  make room, and grows back on a quiet day. Only on a very busy day (about 12 or more
+  events) does the last line say "+N more – OK opens the day".
 - **Week:** the seven days of the week (starting on your locale's first weekday), each with a
   header, including empty days.
 - **Day:** one day, all-day events first.

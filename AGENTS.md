@@ -286,8 +286,10 @@ Screens:
   launch) → **Week** → **Day** → **Agenda**.
   - Month: the grid fills all the height the screen has (the E4810 runs at ~0.75 density, so
     never size it in fixed dp); a grid of bordered blocks, one full-width colour stripe per event stacked in each
-    block, "+N" when they don't fit. Under it, the focused day's events, one line each, then
-    "+N more – OK opens the day".
+    block, "+N" when they don't fit. Under it, **every** event of the focused day, one line each:
+    the list is as tall as that day needs and the grid shrinks only by that much, down to
+    `month_grid_min_height`; "+N more – OK opens the day" appears only past that (owner,
+    round 5: no fixed-size band).
   - Week: 7 days, every day with a header, empty days included; the week starts on the
     locale's first day.
   - Day: all-day events at the top.

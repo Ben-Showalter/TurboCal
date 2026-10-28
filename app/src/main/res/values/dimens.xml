@@ -13,6 +13,7 @@
     <dimen name="focus_corner">6dp</dimen>
     <dimen name="gutter">6dp</dimen>
     <dimen name="day_info_line">18dp</dimen>
-    <!-- Month view: header line + 3 event lines (4 × day_info_line); the grid fills the rest. -->
-    <dimen name="day_info_height">72dp</dimen>
+    <!-- Month view: the smallest the grid may shrink to make room for a busy day's list
+         (16dp weekday band + 6 rows of 24dp: a day number and about one stripe). -->
+    <dimen name="month_grid_min_height">160dp</dimen>
 </resources>

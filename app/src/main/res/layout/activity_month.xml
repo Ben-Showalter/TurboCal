@@ -13,16 +13,16 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:minHeight="@dimen/month_grid_min_height"
         android:focusable="true"
         android:focusableInTouchMode="false" />
 
-    <!-- The selected day's events, filled in code: a header and up to three lines, the
-         last one "+N more" when they don't fit. Fixed height so the grid never jumps;
-         the grid takes everything else. -->
+    <!-- Every event of the focused day, filled in code. It is as tall as that day needs;
+         the grid gives up only that much, never below month_grid_min_height. -->
     <LinearLayout
         android:id="@+id/day_info"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/day_info_height"
+        android:layout_height="wrap_content"
         android:background="?attr/tcSurface"
         android:focusable="false"
         android:orientation="vertical"

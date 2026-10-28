@@ -90,21 +90,26 @@ class MonthActivity : CalendarActivity() {
     }
 
     /**
-     * The selected day's events under the grid, one line each in Day-view
-     * order: as many as fit, then "+N more – OK opens the day". Not focusable;
-     * focus stays on the grid.
+     * Every event of the selected day under the grid, one line each in Day-view
+     * order. The list is as tall as it needs; the grid (weight 1) shrinks by just
+     * that much, down to month_grid_min_height. Only past that does the last
+     * line become "+N more – OK opens the day". Not focusable; focus stays on
+     * the grid.
      */
     private fun renderDayInfo() {
         val rows = DayBuilder.build(events, selected, zone, formats).filterIsInstance<Row.Event>()
         dayInfo.removeAllViews()
         val lineH = resources.getDimensionPixelSize(R.dimen.day_info_line)
         dayInfo.addView(infoText(formats.dayInfoHeader(selected, today, rows.size), header = true), ViewGroup.LayoutParams.MATCH_PARENT, lineH)
-        if (dayInfo.height == 0) {
+        // Grid and list share this space, so the sum doesn't change as the list grows.
+        val shared = grid.height + dayInfo.height
+        if (shared == 0) {
             // Not laid out yet: fill in once the height is known.
-            dayInfo.post { if (dayInfo.height > 0) renderDayInfo() }
+            dayInfo.post { if (grid.height + dayInfo.height > 0) renderDayInfo() }
             return
         }
-        val lines = (dayInfo.height - dayInfo.paddingTop - dayInfo.paddingBottom) / lineH - 1
+        val minGrid = resources.getDimensionPixelSize(R.dimen.month_grid_min_height)
+        val lines = ((shared - minGrid - dayInfo.paddingTop - dayInfo.paddingBottom) / lineH - 1).coerceAtLeast(1)
         val fit = if (rows.size <= lines) rows.size else (lines - 1).coerceAtLeast(0)
         for (r in rows.take(fit)) {
             val v = layoutInflater.inflate(R.layout.row_day_info, dayInfo, false)
